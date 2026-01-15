@@ -1,0 +1,514 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GymGraph - Premium Fitness Design System */
+/* Inspired by Nike, Adidas, Apple */
+
+:root {
+  --primary: #0066FF;
+  --primary-dark: #0052CC;
+  --primary-light: #E6F0FF;
+  --accent: #00D4AA;
+  --dark: #0A0A0A;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --bg-white: #FFFFFF;
+  --bg-light: #F8F9FA;
+  --bg-subtle: #F0F2F5;
+  --border-light: #E5E7EB;
+  --border-subtle: #EEEEEE;
+  --success: #00C853;
+  --warning: #FF9500;
+  --error: #FF3B30;
+}
+
+html, body {
+  @apply bg-white text-gray-900 antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Prevent horizontal scroll */
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Premium Button Styles */
+.btn-primary {
+  @apply bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.25);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(0, 102, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  @apply bg-[#111111] hover:bg-[#222222] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+}
+
+.btn-outline {
+  @apply border-2 border-[#E5E7EB] hover:border-[#0066FF] text-[#111111] hover:text-[#0066FF] font-semibold px-6 py-3 rounded-xl transition-all duration-200 bg-transparent;
+}
+
+/* Card Styles */
+.card-premium {
+  @apply bg-white rounded-2xl border border-[#E5E7EB];
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.card-premium:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-elevated {
+  @apply bg-white rounded-2xl;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Stat Card */
+.stat-card {
+  @apply bg-[#F8F9FA] rounded-2xl p-6 border border-[#EEEEEE];
+}
+
+/* Navigation Active State */
+.nav-active {
+  @apply bg-[#0066FF] text-white;
+}
+
+/* Input Styles */
+input:focus, textarea:focus, select:focus {
+  @apply ring-2 ring-[#0066FF]/20 border-[#0066FF] outline-none;
+}
+
+/* Progress Bar */
+.progress-bar {
+  @apply bg-[#E5E7EB] rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply bg-[#0066FF] rounded-full transition-all duration-500;
+}
+
+/* Badge Styles */
+.badge-primary {
+  @apply bg-[#E6F0FF] text-[#0066FF] font-semibold px-3 py-1 rounded-lg text-sm;
+}
+
+.badge-success {
+  @apply bg-[#E6FFF5] text-[#00C853] font-semibold px-3 py-1 rounded-lg text-sm;
+}
+
+.badge-warning {
+  @apply bg-[#FFF8E6] text-[#FF9500] font-semibold px-3 py-1 rounded-lg text-sm;
+}
+
+.badge-dark {
+  @apply bg-[#111111] text-white font-semibold px-3 py-1 rounded-lg text-sm;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Typography */
+.heading-xl {
+  @apply text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#111111];
+}
+
+.heading-lg {
+  @apply text-3xl sm:text-4xl font-bold tracking-tight text-[#111111];
+}
+
+.heading-md {
+  @apply text-xl sm:text-2xl font-semibold text-[#111111];
+}
+
+.text-body {
+  @apply text-base text-[#555555] leading-relaxed;
+}
+
+.text-caption {
+  @apply text-sm text-[#888888];
+}
+
+/* Divider */
+.divider {
+  @apply border-t border-[#EEEEEE];
+}
+
+/* Hero Background */
+.hero-gradient {
+  background: linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
+}
+
+/* Subtle Grid Pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0, 102, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 102, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+/* Loading bar animation - elegant sliding progress */
+@keyframes loading-bar {
+  0% { width: 0%; margin-left: 0%; }
+  25% { width: 40%; margin-left: 0%; }
+  50% { width: 40%; margin-left: 30%; }
+  75% { width: 40%; margin-left: 60%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s ease-in-out infinite;
+}
+
+/* Badge Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes badge-unlock {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 102, 255, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(0, 102, 255, 0.6); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-badge-unlock {
+  animation: badge-unlock 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Route progress bar - full width sweep */
+@keyframes route-progress {
+  0% { width: 0%; }
+  20% { width: 30%; }
+  50% { width: 60%; }
+  80% { width: 85%; }
+  100% { width: 100%; }
+}
+
+.animate-route-progress {
+  animation: route-progress 0.6s ease-out forwards;
+}
+
+/* Shimmer effect for skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #E5E7EB 25%, #F0F2F5 50%, #E5E7EB 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Stagger animation for lists */
+@keyframes stagger-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(12px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.animate-stagger {
+  animation: stagger-in 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-stagger:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger:nth-child(2) { animation-delay: 50ms; }
+.animate-stagger:nth-child(3) { animation-delay: 100ms; }
+.animate-stagger:nth-child(4) { animation-delay: 150ms; }
+.animate-stagger:nth-child(5) { animation-delay: 200ms; }
+.animate-stagger:nth-child(6) { animation-delay: 250ms; }
+
+/* Scale on tap for buttons */
+.tap-scale {
+  transition: transform 0.15s ease;
+}
+
+.tap-scale:active {
+  transform: scale(0.97);
+}
+
+/* Streak fire glow animation */
+@keyframes fire-glow {
+  0%, 100% { 
+    box-shadow: 0 0 8px rgba(255, 149, 0, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 16px rgba(255, 149, 0, 0.6);
+  }
+}
+
+.animate-fire-glow {
+  animation: fire-glow 2s ease-in-out infinite;
+}
+
+/* Success check animation */
+@keyframes check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-check-pop {
+  animation: check-pop 0.4s ease-out forwards;
+}
+
+/* Number count up effect */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count {
+  animation: count-up 0.5s ease-out forwards;
+}
+
+/* Card press effect */
+.card-interactive {
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.card-interactive:hover {
+  @apply border-[#0066FF]/30;
+  box-shadow: 0 4px 16px rgba(0, 102, 255, 0.1);
+}
+
+.card-interactive:active {
+  transform: scale(0.99);
+}
+
+/* Progress bar fill animation */
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+.animate-progress-fill {
+  animation: progress-fill 0.8s ease-out forwards;
+}
+
+/* Slide up for modals/sheets */
+@keyframes slide-up {
+  from { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Slide down for banners */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s ease-out forwards;
+}
+
+/* Subtle bounce for icons */
+@keyframes subtle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.hover-bounce:hover {
+  animation: subtle-bounce 0.4s ease;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  .mobile-full {
+    width: 100%;
+  }
+  
+  .mobile-stack {
+    flex-direction: column;
+  }
+  
+  .mobile-hide {
+    display: none;
+  }
+  
+  .mobile-text-center {
+    text-align: center;
+  }
+  
+  .mobile-p-4 {
+    padding: 1rem;
+  }
+}
+
+/* Safe area for PWA/mobile */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch-friendly tap targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Focus Ring */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:ring-offset-2;
+}
+
+/* Video Badge Animations */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti 3s ease-out forwards;
+}
+
+@keyframes medal-spin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+.animate-medal-spin {
+  animation: medal-spin 3s linear infinite;
+}
+
+/* 3D medal effect for CSS-only badges */
+.medal-3d {
+  perspective: 1000px;
+}
+
+.medal-3d-inner {
+  transform-style: preserve-3d;
+  animation: medal-spin 5s linear infinite;
+}
+
+/* Golden shine effect */
+@keyframes golden-shine {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-golden-shine {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: golden-shine 2s infinite;
+}
