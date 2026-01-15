@@ -223,23 +223,6 @@ export default function Leaderboards() {
           </Card>
         )}
 
-        {/* Rewards Info */}
-        <Card className="card-premium border-[#FFD700]/30 bg-gradient-to-r from-[#FFFEF5] to-[#FFF8E6]">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-[#FFD700] rounded-xl flex items-center justify-center flex-shrink-0">
-                <Gift className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[#111111] font-semibold mb-1">Monthly Leaderboard Rewards</p>
-                <div className="text-[#555555] text-sm space-y-1">
-                  <p><span className="font-medium">Gym:</span> Top 3 get 50/30/20 coins</p>
-                  <p><span className="font-medium">City:</span> Top 50 get coins (100/75/50 for top 3, 25 for 4-10, 10 for 11-50)</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <Tabs defaultValue="gym" className="w-full">
           <TabsList className="bg-[#F0F2F5] border border-[#E5E7EB] w-full grid grid-cols-4 p-1 rounded-xl">

@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
-  Mail,
   MessageSquare,
   Send,
   CheckCircle2,
-  MapPin,
   Clock,
 } from "lucide-react";
 
@@ -50,15 +48,9 @@ export default function Contact() {
 
   const contactInfo = [
     {
-      icon: Mail,
-      title: "Email Us",
-      detail: "support@gymgraph.com",
-      description: "For general inquiries and support",
-    },
-    {
       icon: MessageSquare,
       title: "Feedback",
-      detail: "feedback@gymgraph.com",
+      detail: "We'd love to hear from you",
       description: "Share your ideas and suggestions",
     },
     {
@@ -108,7 +100,7 @@ export default function Contact() {
       {/* Contact Info Cards */}
       <section className="py-8 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 gap-6">
             {contactInfo.map((item, index) => (
               <div
                 key={index}

@@ -665,36 +665,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[#0066FF] font-semibold text-sm uppercase tracking-wide">How It Works</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] mt-3 mb-4">Dead Simple to Start</h2>
-            <p className="text-lg text-[#555555] max-w-2xl mx-auto">Get your first coins in under 2 minutes</p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {howItWorks.map((item, index) => (
-              <div key={index} className="relative group">
-                <div className="bg-[#F8F9FA] rounded-2xl p-6 h-full border border-[#E5E7EB] hover:border-[#0066FF]/30 hover:shadow-lg transition-all duration-300">
-                  <span className="text-5xl font-bold text-[#0066FF]/10 absolute top-4 right-4">{item.step}</span>
-                  <div className="w-12 h-12 bg-[#0066FF] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <item.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#111111] mb-2">{item.title}</h3>
-                  <p className="text-[#555555]">{item.desc}</p>
-                </div>
-                {index < howItWorks.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 text-[#E5E7EB]">
-                    <ChevronRight className="w-6 h-6" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section className="py-20 px-6 bg-[#F8F9FA]">

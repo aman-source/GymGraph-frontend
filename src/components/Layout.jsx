@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,11 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +25,6 @@ import {
   User,
   Settings,
   LogOut,
-  Menu,
   Flame,
   Bell,
   Gift,
@@ -51,7 +44,6 @@ const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
 export default function Layout({ children, user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // React Query hook - fetches on mount, shares cache with Notifications page
   const { data: notificationData, isLoading: notificationsLoading, refetch } = useNotifications();
@@ -109,24 +101,6 @@ export default function Layout({ children, user }) {
               <span className="text-xl font-bold text-[#111111] hidden sm:block">GymGraph</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  data-testid={`nav-${item.path.replace('/', '')}`}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'bg-[#0066FF] text-white shadow-md shadow-[#0066FF]/20'
-                      : 'text-[#555555] hover:text-[#111111] hover:bg-[#F0F2F5]'
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
@@ -306,97 +280,6 @@ export default function Layout({ children, user }) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Mobile Menu */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden text-[#555555] hover:text-[#0066FF] hover:bg-[#E6F0FF] rounded-xl">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] bg-white border-[#E5E7EB] p-0">
-                  <div className="flex flex-col h-full">
-                    <div className="p-6 border-b border-[#EEEEEE]">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center shadow-md">
-                          <GymGraphLogo className="w-6 h-6" />
-                        </div>
-                        <span className="text-xl font-bold text-[#111111]">GymGraph</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 rounded-full border-2 border-[#E5E7EB]">
-                          <AvatarImage src={user?.picture} className="rounded-full object-cover" />
-                          <AvatarFallback className="bg-gradient-to-br from-[#0066FF] to-[#0052CC] text-white rounded-full font-semibold">
-                            {(user?.display_name || user?.name || 'U').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-[#111111] font-semibold">{user?.display_name || user?.name}</p>
-                          {user?.current_streak > 0 && (
-                            <div className="flex items-center gap-1 text-[#FF6B35]">
-                              <Flame className="w-4 h-4" />
-                              <span className="text-sm font-medium">{user.current_streak}w streak</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <nav className="flex-1 p-4 space-y-1">
-                      {navItems.map((item) => (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                            isActive(item.path)
-                              ? 'bg-[#0066FF] text-white shadow-md'
-                              : 'text-[#555555] hover:text-[#0066FF] hover:bg-[#F8F9FA]'
-                          }`}
-                        >
-                          {item.icon}
-                          <span>{item.label}</span>
-                        </Link>
-                      ))}
-                    </nav>
-
-                    <div className="p-4 border-t border-[#EEEEEE] space-y-1">
-                      <Link
-                        to="/profile"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#555555] hover:text-[#0066FF] hover:bg-[#F8F9FA] font-medium"
-                      >
-                        <User className="w-5 h-5" />
-                        <span>Profile</span>
-                      </Link>
-                      <Link
-                        to="/settings"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#555555] hover:text-[#0066FF] hover:bg-[#F8F9FA] font-medium"
-                      >
-                        <Settings className="w-5 h-5" />
-                        <span>Settings</span>
-                      </Link>
-                      {user?.role === 'super_admin' && (
-                        <Link
-                          to="/super-admin"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B5CF6] hover:bg-[#F3E8FF] font-medium"
-                        >
-                          <Shield className="w-5 h-5" />
-                          <span>Admin Dashboard</span>
-                        </Link>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#FF3B30] hover:bg-red-50 font-medium w-full"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
             </div>
           </div>
         </div>
