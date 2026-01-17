@@ -63,16 +63,82 @@ export function useCreateCheckin() {
       const { data } = await api.post('/checkins', checkinData);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.checkins.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });
       queryClient.invalidateQueries({ queryKey: queryKeys.engagement.userProgress() });
       queryClient.invalidateQueries({ queryKey: queryKeys.engagement.all });
-      toast.success('Check-in successful!');
+      // Invalidate active session to show the new pending reward
+      queryClient.invalidateQueries({ queryKey: ['activeSession'] });
+
+      // Show workout started message (coins come later)
+      if (data.pending_reward) {
+        toast.success(`Workout started! Stay ${data.pending_reward.minutes_until_eligible} mins to earn coins`);
+      } else {
+        toast.success('Check-in successful!');
+      }
     },
     onError: (error) => {
       toast.error(error.response?.data?.detail || 'Check-in failed');
+    },
+  });
+}
+
+/**
+ * Hook to get active workout session
+ * Used to restore state when app reopens
+ */
+export function useActiveSession() {
+  return useQuery({
+    queryKey: ['activeSession'],
+    queryFn: async () => {
+      const { data } = await api.get('/checkins/active-session');
+      return data;
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: (data) => {
+      // Poll more frequently when there's an active session
+      return data?.active_session ? 30 * 1000 : false;
+    },
+  });
+}
+
+/**
+ * Hook to claim pending workout reward
+ * Requires GPS verification that user is still at gym
+ */
+export function useClaimReward() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ pendingId, latitude, longitude }) => {
+      const { data } = await api.post(`/checkins/claim-reward/${pendingId}`, {
+        latitude,
+        longitude,
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['activeSession'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credits?.balance?.() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.checkins.all });
+
+      // Clear localStorage session
+      localStorage.removeItem('activeWorkoutSession');
+
+      toast.success(data.message || `You earned ${data.coins_earned} coins!`);
+    },
+    onError: (error) => {
+      const message = error.response?.data?.detail || 'Failed to claim reward';
+      toast.error(message);
+
+      // If reward was forfeited, clear the session
+      if (message.includes('forfeited')) {
+        localStorage.removeItem('activeWorkoutSession');
+        queryClient.invalidateQueries({ queryKey: ['activeSession'] });
+      }
     },
   });
 }

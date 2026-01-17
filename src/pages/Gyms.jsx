@@ -3,9 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/App";
-import { useSearchGyms, useNearbyGyms } from "@/hooks";
+import {
+  useSearchGyms,
+  useNearbyGyms,
+  useSmartSearchGyms,
+  useRecordGymSelection,
+  useSubmitGym,
+} from "@/hooks";
 import {
   Search,
   CheckCircle,
@@ -16,8 +31,12 @@ import {
   ChevronDown,
   X,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  Plus,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Debounce hook
 function useDebounce(value, delay) {
@@ -57,24 +76,38 @@ const getConciselocation = (gym) => {
 // Generate Google Maps URL for directions
 const getGoogleMapsUrl = (gym) => {
   if (gym.latitude && gym.longitude) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${gym.latitude},${gym.longitude}&destination_place_id=${encodeURIComponent(gym.name)}`;
+    // Use coordinates for directions - more reliable than place_id which we may not have
+    return `https://www.google.com/maps/dir/?api=1&destination=${gym.latitude},${gym.longitude}`;
   }
   // Fallback to search by name and address
-  const query = encodeURIComponent(`${gym.name}, ${gym.address}, ${gym.city}`);
+  const query = encodeURIComponent(`${gym.name}${gym.address ? `, ${gym.address}` : ""}${gym.city ? `, ${gym.city}` : ""}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 };
 
-// Gym Card Component
-const GymCard = ({ gym, user, onNavigate }) => {
+// Gym Card Component with selection tracking
+const GymCard = ({ gym, user, onNavigate, onSelect, position, searchQuery, context = "search" }) => {
   const handleMapsClick = (e) => {
     e.stopPropagation();
     window.open(getGoogleMapsUrl(gym), "_blank", "noopener,noreferrer");
   };
 
+  const handleClick = () => {
+    // Record selection for learning system
+    if (onSelect) {
+      onSelect({
+        gym_id: gym.id,
+        search_query: searchQuery,
+        position_shown: position,
+        selection_context: context,
+      });
+    }
+    onNavigate(`/gym/${gym.id}`);
+  };
+
   return (
     <Card
       className="card-premium hover:border-[#0066FF]/30 cursor-pointer transition-all group"
-      onClick={() => onNavigate(`/gym/${gym.id}`)}
+      onClick={handleClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -98,6 +131,15 @@ const GymCard = ({ gym, user, onNavigate }) => {
                   ? `${Math.round(gym.distance_km * 1000)}m away`
                   : `${gym.distance_km.toFixed(1)}km away`}
               </p>
+            )}
+            {/* Match quality indicators */}
+            {gym._scores && gym._scores.name_match > 0.8 && (
+              <div className="flex items-center gap-1 mt-1">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E6F0FF] text-[#0066FF] text-xs rounded-full">
+                  <Sparkles className="w-3 h-3" />
+                  Best match
+                </span>
+              </div>
             )}
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -124,6 +166,118 @@ const GymCard = ({ gym, user, onNavigate }) => {
   );
 };
 
+// "Can't find your gym?" Component
+const CantFindGymDialog = ({ isOpen, onClose, searchQuery, userLocation }) => {
+  const submitGym = useSubmitGym();
+  const [formData, setFormData] = useState({
+    gym_name: searchQuery || "",
+    address: "",
+    city: "",
+    additional_info: "",
+  });
+
+  useEffect(() => {
+    if (searchQuery) {
+      setFormData(prev => ({ ...prev, gym_name: searchQuery }));
+    }
+  }, [searchQuery]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await submitGym.mutateAsync({
+        ...formData,
+        latitude: userLocation?.latitude,
+        longitude: userLocation?.longitude,
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+        onClose();
+        setFormData({ gym_name: "", address: "", city: "", additional_info: "" });
+      } else {
+        if (result.existing_gym) {
+          toast.error(`A similar gym exists: ${result.existing_gym.name}`);
+        } else {
+          toast.error(result.message);
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to submit. Please try again.");
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5 text-[#0066FF]" />
+            Submit a Gym
+          </DialogTitle>
+          <DialogDescription>
+            Can't find your gym? Submit it and we'll add it within 24-48 hours.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="gym_name">Gym Name *</Label>
+            <Input
+              id="gym_name"
+              value={formData.gym_name}
+              onChange={(e) => setFormData({ ...formData, gym_name: e.target.value })}
+              placeholder="e.g., Gold's Gym"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="e.g., 123 Main Street, Banjara Hills"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder="e.g., Hyderabad"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="additional_info">Additional Info</Label>
+            <Input
+              id="additional_info"
+              value={formData.additional_info}
+              onChange={(e) => setFormData({ ...formData, additional_info: e.target.value })}
+              placeholder="e.g., Near City Center Mall"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitGym.isPending}>
+              {submitGym.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Gym"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function Gyms() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -135,6 +289,12 @@ export default function Gyms() {
   // Location state
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
+
+  // Dialog state
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+
+  // Selection tracking
+  const recordSelection = useRecordGymSelection();
 
   // Get user location on mount
   useEffect(() => {
@@ -155,15 +315,27 @@ export default function Gyms() {
     }
   }, []);
 
-  // React Query hooks for data fetching
+  // Use smart search hook when user has location, fallback to basic search
   const {
-    data: searchData,
-    isLoading: searchLoading,
-    isFetchingNextPage: searchingMore,
-    hasNextPage: hasMoreSearch,
-    fetchNextPage: loadMoreSearch,
+    data: smartSearchData,
+    isLoading: smartSearchLoading,
+    isFetchingNextPage: smartSearchingMore,
+    hasNextPage: hasMoreSmartSearch,
+    fetchNextPage: loadMoreSmartSearch,
+  } = useSmartSearchGyms(debouncedSearch, userLocation, {
+    enabled: debouncedSearch.length >= 2,
+  });
+
+  // Fallback to basic search if no location
+  const {
+    data: basicSearchData,
+    isLoading: basicSearchLoading,
+    isFetchingNextPage: basicSearchingMore,
+    hasNextPage: hasMoreBasicSearch,
+    fetchNextPage: loadMoreBasicSearch,
   } = useSearchGyms(debouncedSearch);
 
+  // Nearby gyms
   const {
     data: nearbyData,
     isLoading: nearbyLoading,
@@ -171,6 +343,17 @@ export default function Gyms() {
     hasNextPage: hasMoreNearby,
     fetchNextPage: loadMoreNearby,
   } = useNearbyGyms(userLocation?.latitude, userLocation?.longitude);
+
+  // Determine which search data to use
+  const useSmartSearch = userLocation && debouncedSearch.length >= 2;
+  const searchData = useSmartSearch ? smartSearchData : basicSearchData;
+  const searchLoading = useSmartSearch ? smartSearchLoading : basicSearchLoading;
+  const searchingMore = useSmartSearch ? smartSearchingMore : basicSearchingMore;
+  const hasMoreSearch = useSmartSearch ? hasMoreSmartSearch : hasMoreBasicSearch;
+  const loadMoreSearch = useSmartSearch ? loadMoreSmartSearch : loadMoreBasicSearch;
+
+  // Check if Google search was triggered
+  const googleSearchTriggered = searchData?.pages?.[0]?.google_search_triggered;
 
   // Flatten paginated results
   const searchResults = useMemo(() => {
@@ -186,6 +369,17 @@ export default function Gyms() {
 
   const clearSearch = () => {
     setSearchQuery("");
+  };
+
+  // Handle gym selection (for learning system)
+  const handleGymSelect = (selectionData) => {
+    if (userLocation) {
+      recordSelection.mutate({
+        ...selectionData,
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+    }
   };
 
   return (
@@ -219,6 +413,14 @@ export default function Gyms() {
             </button>
           )}
         </div>
+
+        {/* Google search indicator */}
+        {hasSearched && googleSearchTriggered && !isSearching && (
+          <div className="flex items-center gap-2 text-[#555555] text-sm">
+            <AlertCircle className="w-4 h-4 text-[#0066FF]" />
+            <span>Searching more gyms... results may expand.</span>
+          </div>
+        )}
 
         {/* Quick area buttons when no search and no nearby gyms */}
         {!hasSearched && !locationLoading && nearbyGyms.length === 0 && (
@@ -254,8 +456,17 @@ export default function Gyms() {
             {searchResults.length > 0 ? (
               <>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {searchResults.map((gym) => (
-                    <GymCard key={gym.id} gym={gym} user={user} onNavigate={navigate} />
+                  {searchResults.map((gym, index) => (
+                    <GymCard
+                      key={gym.id}
+                      gym={gym}
+                      user={user}
+                      onNavigate={navigate}
+                      onSelect={handleGymSelect}
+                      position={index}
+                      searchQuery={debouncedSearch}
+                      context="search"
+                    />
                   ))}
                 </div>
 
@@ -277,6 +488,19 @@ export default function Gyms() {
                     </Button>
                   </div>
                 )}
+
+                {/* Can't find your gym? */}
+                <div className="text-center py-6 border-t border-[#E5E7EB] mt-6">
+                  <p className="text-[#555555] mb-3">Can't find your gym?</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSubmitDialog(true)}
+                    className="border-[#0066FF] text-[#0066FF] hover:bg-[#E6F0FF] rounded-xl"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Submit a Gym
+                  </Button>
+                </div>
               </>
             ) : !isSearching && (
               <div className="text-center py-8">
@@ -284,15 +508,26 @@ export default function Gyms() {
                   <Building2 className="w-8 h-8 text-[#888888]" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#111111] mb-2">No gyms found</h3>
-                <p className="text-[#555555] max-w-md mx-auto">
+                <p className="text-[#555555] max-w-md mx-auto mb-4">
                   No results for "{searchQuery}". Try a different name, area, or city.
                 </p>
-                <button
-                  onClick={clearSearch}
-                  className="mt-4 text-[#0066FF] hover:underline"
-                >
-                  Clear search
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={clearSearch}
+                    className="text-[#0066FF] hover:underline"
+                  >
+                    Clear search
+                  </button>
+                  <span className="hidden sm:inline text-[#888888]">or</span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSubmitDialog(true)}
+                    className="border-[#0066FF] text-[#0066FF] hover:bg-[#E6F0FF] rounded-xl"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Submit this gym
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -325,8 +560,16 @@ export default function Gyms() {
             ) : nearbyGyms.length > 0 ? (
               <>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {nearbyGyms.map((gym) => (
-                    <GymCard key={gym.id} gym={gym} user={user} onNavigate={navigate} />
+                  {nearbyGyms.map((gym, index) => (
+                    <GymCard
+                      key={gym.id}
+                      gym={gym}
+                      user={user}
+                      onNavigate={navigate}
+                      onSelect={handleGymSelect}
+                      position={index}
+                      context="nearby"
+                    />
                   ))}
                 </div>
 
@@ -376,6 +619,14 @@ export default function Gyms() {
           </div>
         )}
       </div>
+
+      {/* Submit Gym Dialog */}
+      <CantFindGymDialog
+        isOpen={showSubmitDialog}
+        onClose={() => setShowSubmitDialog(false)}
+        searchQuery={searchQuery}
+        userLocation={userLocation}
+      />
     </Layout>
   );
 }

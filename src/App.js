@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 // DevTools lazy loaded in dev mode only
 import { queryClient, queryKeys } from "@/lib/queryClient";
 import api, { clearTokenCache, updateTokenCache } from "@/lib/api";
+import { initOneSignal, logoutUser as logoutOneSignal } from "@/lib/onesignal";
 
 // Pages - Lazy loaded for code splitting
 const Landing = lazy(() => import("@/pages/Landing"));
@@ -43,10 +44,79 @@ const LazyDevtools = lazy(() =>
   import("@tanstack/react-query-devtools").then(m => ({ default: m.ReactQueryDevtools }))
 );
 
-// Loading fallback for Suspense
+// Loading fallback for Suspense - premium shimmer skeleton
 const PageLoader = () => (
-  <div className="min-h-screen bg-white flex items-center justify-center">
-    <div className="w-10 h-10 border-2 border-[#0066FF] border-t-transparent rounded-full animate-spin"></div>
+  <div className="min-h-screen min-h-[100dvh] bg-[#F8F9FA]">
+    {/* Top Navigation Skeleton */}
+    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 border-b border-[#E5E7EB]/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 512 512" className="w-6 h-6" fill="white">
+                <polygon points="80,400 220,160 320,400" />
+                <polygon points="200,400 340,100 460,400" />
+              </svg>
+            </div>
+            <div className="h-5 w-24 bg-[#E5E7EB] rounded hidden sm:block animate-pulse" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-[#E5E7EB] rounded-full animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    {/* Main Content Skeleton */}
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-24">
+      <div className="space-y-6 animate-fade-in">
+        {/* Header skeleton */}
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-[#E5E7EB] rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-[#E5E7EB] rounded animate-pulse" />
+        </div>
+
+        {/* Cards skeleton */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#F0F2F5] rounded-xl animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-24 bg-[#F0F2F5] rounded animate-pulse" />
+                  <div className="h-3 w-16 bg-[#F0F2F5] rounded animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* List skeleton */}
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-4 p-3 bg-[#F8F9FA] rounded-xl">
+              <div className="w-10 h-10 bg-[#E5E7EB] rounded-full animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 bg-[#E5E7EB] rounded animate-pulse" />
+                <div className="h-3 w-24 bg-[#E5E7EB] rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+
+    {/* Mobile Bottom Navigation Skeleton */}
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-[#E5E7EB]/50 lg:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around h-16 px-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <div className="w-6 h-6 bg-[#E5E7EB] rounded animate-pulse" />
+            <div className="w-10 h-2 bg-[#E5E7EB] rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </nav>
   </div>
 );
 
@@ -108,6 +178,10 @@ const AuthProvider = ({ children }) => {
       if (isMounted) {
         setAuthState({ isAuthenticated: true, user: profile, isLoading: false });
       }
+      // Initialize OneSignal push notifications with user ID
+      if (profile?.id) {
+        initOneSignal(profile.id);
+      }
       return profile;
     } catch (error) {
       if (isMounted) {
@@ -138,7 +212,13 @@ const AuthProvider = ({ children }) => {
 
     const initAuth = async () => {
       try {
-        const { session } = await auth.getSession();
+        let { data: { session } } = await supabase.auth.getSession();
+
+        // If no session or token expired, try to refresh (handles overnight/long idle)
+        if (!session) {
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          session = refreshData?.session;
+        }
 
         if (!session) {
           if (isMounted) {
@@ -168,6 +248,7 @@ const AuthProvider = ({ children }) => {
         if (event === 'SIGNED_OUT') {
           clearTokenCache();
           profileFetched.current = false; // Reset on sign out
+          logoutOneSignal(); // Unlink user from push notifications
           if (isMounted) {
             setAuthState({ isAuthenticated: false, user: null, isLoading: false });
           }
@@ -181,9 +262,76 @@ const AuthProvider = ({ children }) => {
       }
     );
 
+    // Check if running as installed PWA
+    const isStandalonePWA = window.matchMedia('(display-mode: standalone)').matches ||
+                            window.navigator.standalone === true;
+
+    // Refresh session when app becomes visible (prevents logout after idle)
+    // More aggressive for PWA to handle iOS storage purging
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && isMounted) {
+        try {
+          let { data: { session }, error } = await supabase.auth.getSession();
+
+          // For PWA, always try to refresh to get fresh tokens
+          if (isStandalonePWA || !session) {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshData?.session) {
+              session = refreshData.session;
+            } else if (refreshError && !session) {
+              // Refresh failed and no existing session - user needs to login
+              console.log('PWA session expired, redirect to login');
+              return;
+            }
+          }
+
+          if (session) {
+            updateTokenCache(session.access_token, session.expires_at);
+          }
+        } catch (error) {
+          console.error('Session refresh on visibility change failed:', error);
+        }
+      }
+    };
+
+    // Also listen for focus event (helps with PWA switching)
+    const handleFocus = () => {
+      if (isMounted && isStandalonePWA) {
+        handleVisibilityChange();
+      }
+    };
+
+    // Periodic session refresh for PWA (every 10 minutes when visible)
+    // This keeps tokens fresh and prevents iOS from purging them
+    let refreshInterval = null;
+    if (isStandalonePWA) {
+      refreshInterval = setInterval(async () => {
+        if (document.visibilityState === 'visible' && isMounted) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              // Refresh proactively to keep session active
+              const { data: refreshData } = await supabase.auth.refreshSession();
+              if (refreshData?.session) {
+                updateTokenCache(refreshData.session.access_token, refreshData.session.expires_at);
+              }
+            }
+          } catch (e) {
+            // Ignore errors in background refresh
+          }
+        }
+      }, 10 * 60 * 1000); // Every 10 minutes
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      if (refreshInterval) clearInterval(refreshInterval);
     };
   }, [fetchProfileOnce]);
 
@@ -206,13 +354,9 @@ const ProtectedRoute = ({ children }) => {
     }
   }, [isLoading, isAuthenticated, navigate]);
 
-  // Show loading spinner while checking auth
+  // Show shimmer skeleton while checking auth
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-[#0066FF] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!isAuthenticated) {

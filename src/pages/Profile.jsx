@@ -228,7 +228,6 @@ export default function Profile() {
   const updateUserMutation = useUpdateUser();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
   const [selectedBadge, setSelectedBadge] = useState(null); // For badge modal
   const [editData, setEditData] = useState({
@@ -236,7 +235,6 @@ export default function Profile() {
     bio: "",
     fitness_goal: ""
   });
-  const shareCardRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -262,7 +260,7 @@ export default function Profile() {
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/user/${user?.user_id}`;
+    const shareUrl = `${window.location.origin}/user/${user?.user_id || user?.id}`;
     try {
       if (navigator.share) {
         await navigator.share({
@@ -938,67 +936,6 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Share Dialog */}
-        <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-          <DialogContent className="bg-white rounded-2xl max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="text-[#111111]">Share Profile</DialogTitle>
-            </DialogHeader>
-            <div ref={shareCardRef} className="bg-gradient-to-br from-[#0066FF] to-[#003D99] rounded-xl p-6 text-white mt-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar className="w-12 h-12 border-2 border-white/30 rounded-xl">
-                  <AvatarImage src={user?.picture} />
-                  <AvatarFallback className="bg-white/20 text-white rounded-xl font-bold">
-                    {(user?.display_name || user?.name || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-bold">{user?.display_name || user?.name}</p>
-                  <p className="text-white/70 text-sm">{gym?.name || 'GymGraph'}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="bg-white/10 rounded-lg p-2 text-center">
-                  <p className="text-xl font-bold">{user?.total_sessions || 0}</p>
-                  <p className="text-white/60 text-xs">Sessions</p>
-                </div>
-                <div className="bg-white/10 rounded-lg p-2 text-center">
-                  <p className="text-xl font-bold">{user?.current_streak || 0}w</p>
-                  <p className="text-white/60 text-xs">Streak</p>
-                </div>
-                <div className="bg-white/10 rounded-lg p-2 text-center">
-                  <p className="text-xl font-bold">{user?.challenges_won || 0}</p>
-                  <p className="text-white/60 text-xs">Wins</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                <span className="font-bold text-sm">GymGraph</span>
-                <span className="text-white/60 text-sm">gymgraph.app</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <Button onClick={downloadShareCard} variant="outline" className="rounded-xl">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              <Button onClick={handleShare} className="bg-[#0066FF] hover:bg-[#0052CC] rounded-xl">
-                <Copy className="w-4 h-4 mr-2" />
-                Copy Link
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Mobile FAB */}
-        <div className="fixed bottom-20 right-4 sm:hidden">
-          <Button
-            onClick={() => navigate('/checkin')}
-            size="lg"
-            className="bg-[#0066FF] hover:bg-[#0052CC] rounded-full w-14 h-14 shadow-lg"
-          >
-            <MapPin className="w-6 h-6" />
-          </Button>
-        </div>
       </div>
     </Layout>
   );

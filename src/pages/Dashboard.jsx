@@ -11,10 +11,10 @@ import {
   useCheckinFeed,
   useUserProgress,
   useGymActivity,
-  useLeaderboardPosition,
   useCoinBalance,
   useMyCheckins,
   useStreak,
+  useMyChallenges,
 } from "@/hooks";
 import {
   Zap,
@@ -29,15 +29,12 @@ import {
   ChevronUp,
   Building2,
   AlertTriangle,
-  Award,
   Flame,
   Coins,
   Clock,
   CheckCircle,
   Sparkles,
   ArrowRight,
-  Star,
-  Crown,
   Play,
   Gift,
   Rocket,
@@ -85,53 +82,6 @@ const getGreeting = () => {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
-};
-
-// Animated streak ring
-const StreakRing = ({ current, size = 100 }) => {
-  const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const progress = Math.min(current * 10, 100);
-  const offset = circumference - (progress / 100) * circumference;
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#F0F2F5"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="url(#streakGradient)"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="transition-all duration-1000 ease-out"
-        />
-        <defs>
-          <linearGradient id="streakGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#FF6B35" />
-            <stop offset="100%" stopColor="#FF9500" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <Flame className="w-6 h-6 text-[#FF6B35] mb-1" />
-        <span className="text-2xl font-bold text-[#111111]">{current}</span>
-        <span className="text-[10px] text-[#888888] uppercase tracking-wide">days</span>
-      </div>
-    </div>
-  );
 };
 
 // Stat card component
@@ -215,16 +165,18 @@ export default function Dashboard() {
   const { data: progress } = useUserProgress();
   const { data: gym } = useGym(user?.primary_gym_id);
   const { data: gymActivity } = useGymActivity(user?.primary_gym_id);
-  const { data: leaderboardPos } = useLeaderboardPosition(user?.primary_gym_id);
   const { data: coinData } = useCoinBalance();
   const { data: checkinsData } = useMyCheckins(5);
   const { data: streakData } = useStreak(); // Daily streak data
+  const { data: myChallengesData } = useMyChallenges();
 
   const feed = feedData?.feed || [];
   const myCheckins = checkinsData?.checkins || [];
   const todayCheckin = myCheckins.find(c => isToday(new Date(c.checked_in_at)));
   const coinBalance = coinData?.balance || 0;
   const dailyStreak = streakData?.current_streak || 0;
+  const challengesList = Array.isArray(myChallengesData) ? myChallengesData : (myChallengesData?.challenges || []);
+  const activeChallenges = challengesList.filter(c => c.status === 'active').slice(0, 2);
 
   // Loading skeleton
   if (userLoading) {
@@ -247,7 +199,6 @@ export default function Dashboard() {
   }
 
   const isNewUser = (user?.total_sessions || 0) === 0;
-  const hasStreak = dailyStreak > 0;
   const firstName = user?.display_name?.split(' ')[0] || user?.name?.split(' ')[0] || 'there';
 
   // New user experience
@@ -362,7 +313,7 @@ export default function Dashboard() {
                 <div className="flex -space-x-3">
                   {['#0066FF', '#00C853', '#FF9500', '#8B5CF6'].map((color, i) => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white font-semibold text-sm shadow-md" style={{ backgroundColor: color }}>
-                      {['A', 'B', 'C', 'D'][i]}
+                      {['S', 'M', 'R', 'K'][i]}
                     </div>
                   ))}
                   <div className="w-10 h-10 bg-[#111111] rounded-full border-2 border-white flex items-center justify-center text-white font-semibold text-xs shadow-md">
@@ -646,84 +597,78 @@ export default function Dashboard() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-4">
-            {/* Streak Card */}
+            {/* Active Challenges */}
             <Card className="card-premium">
               <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-[#888888] mb-1">Day Streak</p>
-                    <p className="text-3xl font-bold text-[#111111]">
-                      {dailyStreak}
-                      <span className="text-lg text-[#888888] ml-1">days</span>
-                    </p>
-                    {hasStreak && dailyStreak >= (streakData?.longest_streak || 0) && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Star className="w-4 h-4 text-[#FFB800] fill-current" />
-                        <span className="text-sm text-[#FFB800] font-medium">Personal best!</span>
-                      </div>
-                    )}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-[#0066FF]" />
+                    <p className="font-semibold text-[#111111]">Active Challenges</p>
                   </div>
-                  <StreakRing current={dailyStreak} />
+                  <button
+                    onClick={() => navigate('/challenges')}
+                    className="text-xs text-[#0066FF] font-medium hover:underline"
+                  >
+                    View All
+                  </button>
                 </div>
+                {activeChallenges.length > 0 ? (
+                  <div className="space-y-3">
+                    {activeChallenges.map((challenge) => (
+                      <div
+                        key={challenge.id}
+                        onClick={() => navigate(`/challenge/${challenge.id}`)}
+                        className="p-3 bg-[#F8F9FA] rounded-xl cursor-pointer hover:bg-[#F0F2F5] transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium text-[#111111] text-sm truncate flex-1">{challenge.title}</p>
+                          <span className="text-xs text-[#0066FF] font-medium ml-2">
+                            {challenge.user_progress || 0}/{challenge.target_checkins}
+                          </span>
+                        </div>
+                        <Progress
+                          value={((challenge.user_progress || 0) / challenge.target_checkins) * 100}
+                          className="h-1.5"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-[#888888] text-sm mb-3">No active challenges</p>
+                    <Button
+                      onClick={() => navigate('/challenges')}
+                      size="sm"
+                      className="bg-[#0066FF] hover:bg-[#0052CC] rounded-xl"
+                    >
+                      Join a Challenge
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Gym Ranking */}
-            {leaderboardPos?.user_position && (
-              <Card
-                className="card-premium cursor-pointer hover:shadow-md transition-all"
-                onClick={() => navigate('/leaderboards')}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                      leaderboardPos.is_top_3
-                        ? 'bg-gradient-to-br from-[#FFD700] to-[#FF9500]'
-                        : 'bg-[#F0F2F5]'
-                    }`}>
-                      {leaderboardPos.is_top_3 ? (
-                        <Crown className="w-7 h-7 text-white" />
-                      ) : (
-                        <span className="text-xl font-bold text-[#555555]">#{leaderboardPos.user_position}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-[#111111]">
-                        {leaderboardPos.is_top_3 ? `#${leaderboardPos.user_position}` : 'Gym Ranking'}
-                      </p>
-                      {leaderboardPos.to_overtake_next && (
-                        <p className="text-sm text-[#0066FF]">
-                          {leaderboardPos.to_overtake_next} to move up
-                        </p>
-                      )}
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-[#888888]" />
+            {/* Community - Find Gym Partners */}
+            <Card
+              className="card-premium cursor-pointer hover:shadow-md transition-all bg-gradient-to-br from-[#F3E8FF] to-white border-[#8B5CF6]/20"
+              onClick={() => navigate('/connections')}
+            >
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-white" />
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Next Badge */}
-            {progress?.next_badge && (
-              <Card
-                className="card-premium cursor-pointer hover:shadow-md transition-all"
-                onClick={() => navigate('/profile')}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#FFD700] to-[#FF9500] rounded-xl flex items-center justify-center">
-                      <Award className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-[#888888]">Next Badge</p>
-                      <p className="font-semibold text-[#111111]">{progress.next_badge.name}</p>
-                    </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-[#111111]">Community</p>
+                    <p className="text-sm text-[#555555]">Find gym partners</p>
                   </div>
-                  <Progress value={progress.next_badge.percentage} className="h-2 mb-2" />
-                  <p className="text-xs text-[#0066FF] font-medium">{progress.next_badge.remaining} more to unlock</p>
-                </CardContent>
-              </Card>
-            )}
+                  <ChevronRight className="w-5 h-5 text-[#8B5CF6]" />
+                </div>
+                <p className="text-xs text-[#8B5CF6] mt-3 font-medium">
+                  Connect with gym members and stay accountable together
+                </p>
+              </CardContent>
+            </Card>
 
           </div>
         </div>

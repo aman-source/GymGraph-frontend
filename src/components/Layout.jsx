@@ -29,7 +29,7 @@ import {
   Bell,
   Gift,
   Loader2,
-  Shield
+  Shield,
 } from "lucide-react";
 import InstallPWA from "@/components/InstallPWA";
 
@@ -76,6 +76,7 @@ export default function Layout({ children, user }) {
     window.location.href = "/";
   };
 
+  // Full nav items for desktop
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { path: "/checkin", label: "Check In", icon: <MapPin className="w-5 h-5" /> },
@@ -101,6 +102,23 @@ export default function Layout({ children, user }) {
               <span className="text-xl font-bold text-[#111111] hidden sm:block">GymGraph</span>
             </Link>
 
+            {/* Desktop Navigation Links */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isActive(item.path)
+                      ? 'bg-[#E6F0FF] text-[#0066FF]'
+                      : 'text-[#555555] hover:bg-[#F0F2F5] hover:text-[#111111]'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
@@ -279,7 +297,6 @@ export default function Layout({ children, user }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
           </div>
         </div>

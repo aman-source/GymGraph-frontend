@@ -2,9 +2,11 @@
   "name": "GymGraph",
   "short_name": "GymGraph",
   "description": "Track. Compete. Get Fit.",
-  "start_url": "/",
+  "id": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#0A0A0B",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#FFFFFF",
   "theme_color": "#0066FF",
   "orientation": "portrait-primary",
   "scope": "/",
@@ -13,10 +15,13 @@
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "categories": ["fitness", "health", "lifestyle"],
-  "screenshots": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

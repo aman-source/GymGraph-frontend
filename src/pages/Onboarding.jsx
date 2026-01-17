@@ -50,6 +50,32 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
+// Rotating placeholder hook for bio
+const bioPlaceholders = [
+  "Training for my first marathon...",
+  "Lost 20kg and never looking back!",
+  "Gym at 5AM, every single day",
+  "Former couch potato, now gym addict",
+  "Building strength, one rep at a time",
+  "Fitness journey started 2024",
+  "Morning person thanks to the gym",
+  "Consistency over intensity",
+];
+
+function useRotatingPlaceholder(placeholders, interval = 3000) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % placeholders.length);
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [placeholders.length, interval]);
+
+  return placeholders[index];
+}
+
 // Animated step indicator
 const StepIndicator = ({ currentStep, totalSteps }) => {
   return (
@@ -163,8 +189,11 @@ export default function Onboarding() {
   const [referralApplying, setReferralApplying] = useState(false);
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralFromLink, setReferralFromLink] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationRequested, setLocationRequested] = useState(false);
 
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchQuery, 800);
+  const bioPlaceholder = useRotatingPlaceholder(bioPlaceholders, 3000);
 
   // Auto-fill referral code from localStorage (set by Landing page from ?ref= URL)
   useEffect(() => {
@@ -175,7 +204,29 @@ export default function Onboarding() {
     }
   }, []);
 
-  // Search gyms when debounced search changes
+  // Request geolocation when reaching gym search step
+  useEffect(() => {
+    if (step === 2 && !locationRequested) {
+      setLocationRequested(true);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          () => {
+            // Location denied - will use database-only search
+            console.log("Location access denied, using database search only");
+          },
+          { timeout: 10000, enableHighAccuracy: false }
+        );
+      }
+    }
+  }, [step, locationRequested]);
+
+  // Search gyms using Google Places API directly for accurate results
   useEffect(() => {
     const searchGyms = async () => {
       if (!debouncedSearch || debouncedSearch.length < 2) {
@@ -185,28 +236,60 @@ export default function Onboarding() {
 
       setSearching(true);
       try {
-        const response = await api.get('/gyms', {
-          params: { search: debouncedSearch, limit: 20 }
-        });
+        // Use Google search endpoint directly for accurate results
+        const params = {
+          query: debouncedSearch,
+          limit: 10
+        };
+
+        // Add location for short queries (helps with nearby results)
+        if (userLocation) {
+          params.latitude = userLocation.latitude;
+          params.longitude = userLocation.longitude;
+        }
+
+        const response = await api.get('/gyms/google-search', { params });
         setGyms(response.data.gyms || []);
       } catch {
-        // Search failed - gyms array remains empty
+        // Fallback to database search if Google fails
+        try {
+          const response = await api.get('/gyms', {
+            params: { search: debouncedSearch, limit: 20 }
+          });
+          setGyms(response.data.gyms || []);
+        } catch {
+          // Search failed - gyms array remains empty
+        }
       } finally {
         setSearching(false);
       }
     };
 
     searchGyms();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, userLocation]);
 
-  const handleGymSelect = (gym) => {
-    if (formData.primary_gym_id === gym.id) {
+  const handleGymSelect = async (gym) => {
+    // Deselect if same gym clicked
+    if (selectedGym?.place_id === gym.place_id || formData.primary_gym_id === gym.id) {
       setFormData({ ...formData, primary_gym_id: "" });
       setSelectedGym(null);
-    } else {
-      setFormData({ ...formData, primary_gym_id: gym.id });
-      setSelectedGym(gym);
+      return;
     }
+
+    // If gym is from Google (has place_id but no id), store it first
+    if (gym.place_id && !gym.id) {
+      try {
+        const response = await api.post('/gyms/store-selection', gym);
+        gym.id = response.data.gym_id;
+      } catch (err) {
+        console.error("Failed to store gym:", err);
+        toast.error("Failed to select gym. Please try again.");
+        return;
+      }
+    }
+
+    setFormData({ ...formData, primary_gym_id: gym.id });
+    setSelectedGym(gym);
   };
 
   const goToStep = (newStep) => {
@@ -288,7 +371,7 @@ export default function Onboarding() {
   const steps = [
     { title: "What should we call you?", subtitle: "Let's personalize your experience" },
     { title: "What's your fitness goal?", subtitle: "This helps us tailor your experience" },
-    { title: "Find your gym", subtitle: "We have 6000+ verified gyms across India" },
+    { title: "Find your gym", subtitle: "Search any gym in India" },
   ];
 
   const canProceed = () => {
@@ -354,10 +437,10 @@ export default function Onboarding() {
                         Bio <span className="font-normal text-[#888888]">(Optional)</span>
                       </label>
                       <Textarea
-                        placeholder="Share a bit about your fitness journey..."
+                        placeholder={bioPlaceholder}
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 150) })}
-                        className="bg-[#F8F9FA] border-[#E5E7EB] text-[#111111] placeholder:text-[#888888] min-h-[100px] rounded-xl resize-none focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/20"
+                        className="bg-[#F8F9FA] border-[#E5E7EB] text-[#111111] placeholder:text-[#888888] placeholder:transition-opacity min-h-[100px] rounded-xl resize-none focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/20"
                         data-testid="bio-input"
                       />
                       <div className="flex justify-between items-center mt-2">
@@ -455,7 +538,7 @@ export default function Onboarding() {
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                       <Input
-                        placeholder="Search by gym name, area, or city..."
+                        placeholder="e.g., Gold's Gym, Hyderabad"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-12 pr-12 h-14 bg-[#F8F9FA] border-[#E5E7EB] text-[#111111] placeholder:text-[#888888] rounded-xl text-lg focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/20"
@@ -517,9 +600,9 @@ export default function Onboarding() {
                         ) : gyms.length > 0 ? (
                           gyms.map((gym) => (
                             <GymCard
-                              key={gym.id}
+                              key={gym.id || gym.place_id}
                               gym={gym}
-                              selected={formData.primary_gym_id === gym.id}
+                              selected={formData.primary_gym_id === gym.id || selectedGym?.place_id === gym.place_id}
                               onClick={() => handleGymSelect(gym)}
                             />
                           ))
@@ -528,8 +611,8 @@ export default function Onboarding() {
                             <div className="w-14 h-14 bg-[#F8F9FA] rounded-2xl flex items-center justify-center mx-auto mb-3">
                               <Building2 className="w-7 h-7 text-[#888888]" />
                             </div>
-                            <p className="text-[#555555] font-medium">No gyms found</p>
-                            <p className="text-[#888888] text-sm mt-1">Try a different search term</p>
+                            <p className="text-[#555555] font-medium">No gyms found for "{searchQuery}"</p>
+                            <p className="text-[#888888] text-sm mt-1">Try a different search term or area name</p>
                           </div>
                         )}
                       </div>

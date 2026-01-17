@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/App";
-import { useGym, useGymActivity, useUserProgress, useCreateCheckin, useEconomyInfo, useTodayCheckins } from "@/hooks";
+import { useGym, useGymActivity, useUserProgress, useCreateCheckin, useEconomyInfo, useTodayCheckins, useActiveSession, useClaimReward } from "@/hooks";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -34,6 +34,9 @@ import {
   Waves,
   Info,
   Clock,
+  Timer,
+  Play,
+  Gift,
 } from "lucide-react";
 
 // Haversine distance calculation - accurate for Earth coordinates
@@ -199,6 +202,61 @@ const Confetti = () => {
   );
 };
 
+// Timer progress ring for workout in progress
+const WorkoutTimerRing = ({ secondsElapsed, totalSeconds, isEligible }) => {
+  const percentage = Math.min(100, (secondsElapsed / totalSeconds) * 100);
+  const strokeWidth = 12;
+  const size = 180;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const minutes = Math.floor(secondsElapsed / 60);
+  const seconds = secondsElapsed % 60;
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg className="transform -rotate-90" width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#F0F2F5"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={isEligible ? "#00C853" : "#0066FF"}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {isEligible ? (
+          <>
+            <Gift className="w-10 h-10 text-[#00C853] mb-1 animate-bounce" />
+            <span className="text-lg font-bold text-[#00C853]">Ready!</span>
+          </>
+        ) : (
+          <>
+            <span className="text-4xl font-bold text-[#111111]">
+              {minutes}:{seconds.toString().padStart(2, '0')}
+            </span>
+            <span className="text-sm text-[#888888]">elapsed</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function CheckIn() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -214,6 +272,8 @@ export default function CheckIn() {
   const { mutate: createCheckin, isPending: checking } = useCreateCheckin();
   const { data: economyInfo } = useEconomyInfo();
   const { data: todayCheckins } = useTodayCheckins();
+  const { data: activeSessionData, refetch: refetchActiveSession } = useActiveSession();
+  const { mutate: claimReward, isPending: claiming } = useClaimReward();
 
   // Get check-in settings from config
   const checkinRadius = economyInfo?.checkin_radius_meters || 500;
@@ -223,6 +283,38 @@ export default function CheckIn() {
   // Calculate today's check-in count
   const todayCount = todayCheckins?.length || progress?.today_checkins || 0;
   const canCheckInToday = todayCount < maxCheckinsPerDay;
+
+  // Active workout session
+  const activeSession = activeSessionData?.active_session;
+  const [workoutInProgress, setWorkoutInProgress] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [claimSuccess, setClaimSuccess] = useState(null);
+
+  // Timer for workout in progress
+  useEffect(() => {
+    if (!activeSession && !workoutInProgress) return;
+
+    // Calculate elapsed time from check-in
+    const session = activeSession;
+    if (session) {
+      const checkinTime = new Date(session.checkin_time).getTime();
+      const now = Date.now();
+      const elapsed = Math.floor((now - checkinTime) / 1000);
+      setElapsedSeconds(elapsed);
+      setWorkoutInProgress(true);
+    }
+
+    // Update timer every second
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeSession, workoutInProgress]);
+
+  // Check if eligible to claim (30 minutes = 1800 seconds)
+  const requiredSeconds = 30 * 60; // 30 minutes
+  const isEligibleToClaim = activeSession?.is_eligible || elapsedSeconds >= requiredSeconds;
 
   // State
   const [location, setLocation] = useState(null);
@@ -513,12 +605,18 @@ export default function CheckIn() {
       {
         onSuccess: (data) => {
           setCheckinResult(data);
-          setSuccess(true);
-          setShowConfetti(true);
 
-          // Clear any previous timeouts
-          timeoutIdsRef.current.forEach(id => clearTimeout(id));
-          timeoutIdsRef.current = [];
+          // If there's a pending reward, show workout-in-progress UI
+          if (data.pending_reward) {
+            setWorkoutInProgress(true);
+            setElapsedSeconds(0);
+            // Refetch active session to get the latest data
+            refetchActiveSession();
+          } else {
+            // Fallback to old success flow if no pending reward
+            setSuccess(true);
+            setShowConfetti(true);
+          }
 
           // Show streak bonus toasts
           if (data.streak?.bonuses?.length > 0) {
@@ -539,25 +637,167 @@ export default function CheckIn() {
                     description: `You earned the ${badge.badge_name} badge!`
                   }
                 );
-              }, 1000 + (index * 800)); // Stagger badge notifications
+              }, 1000 + (index * 800));
               timeoutIdsRef.current.push(timeoutId);
             });
           }
+        },
+        // Note: Error toast is handled by useCreateCheckin hook - don't duplicate here
+      }
+    );
+  };
+
+  // Handle claiming the workout reward
+  const handleClaimReward = () => {
+    if (!location) {
+      toast.error("Getting your location...");
+      refreshLocation();
+      return;
+    }
+
+    if (!activeSession?.pending_id) {
+      toast.error("No active workout session");
+      return;
+    }
+
+    claimReward(
+      {
+        pendingId: activeSession.pending_id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      },
+      {
+        onSuccess: (data) => {
+          setClaimSuccess(data);
+          setWorkoutInProgress(false);
+          setSuccess(true);
+          setShowConfetti(true);
+          setCheckinResult({
+            ...checkinResult,
+            coins_earned: data.coins_earned,
+            workout_duration_minutes: data.workout_duration_minutes,
+          });
 
           const confettiTimeout = setTimeout(() => setShowConfetti(false), 4000);
-          const navigateTimeout = setTimeout(() => navigate("/dashboard"), data.badges_earned?.length > 0 ? 6000 : 4000);
+          const navigateTimeout = setTimeout(() => navigate("/dashboard"), 5000);
           timeoutIdsRef.current.push(confettiTimeout, navigateTimeout);
-        },
-        onError: (error) => {
-          const message = error.response?.data?.detail || "Check-in failed";
-          toast.error(message);
         },
       }
     );
   };
 
   const isAtGym = distance !== null && distance <= checkinRadius;
-  const canCheckIn = !checking && !locationLoading && !locationError && gym && isAtGym && canCheckInToday;
+  const canCheckIn = !checking && !locationLoading && !locationError && gym && isAtGym && canCheckInToday && !workoutInProgress;
+
+  // Workout In Progress Screen
+  if (workoutInProgress && activeSession) {
+    const remainingSeconds = Math.max(0, requiredSeconds - elapsedSeconds);
+    const remainingMinutes = Math.floor(remainingSeconds / 60);
+
+    return (
+      <Layout user={user}>
+        <div className="max-w-sm mx-auto py-6 px-4" data-testid="workout-in-progress">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+              <Play className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-[#111111] mb-1">Workout In Progress</h2>
+            <p className="text-sm text-[#555555]">{activeSession.gym_name}</p>
+          </div>
+
+          {/* Timer Ring */}
+          <Card className="shadow-lg mb-6">
+            <CardContent className="p-6 flex flex-col items-center">
+              <WorkoutTimerRing
+                secondsElapsed={elapsedSeconds}
+                totalSeconds={requiredSeconds}
+                isEligible={isEligibleToClaim}
+              />
+
+              <div className="mt-4 text-center">
+                {isEligibleToClaim ? (
+                  <p className="text-[#00C853] font-semibold">
+                    Your reward is ready to claim!
+                  </p>
+                ) : (
+                  <p className="text-[#555555]">
+                    <span className="font-semibold text-[#0066FF]">{remainingMinutes} min</span> until you can claim
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reward Info */}
+          <Card className="border-[#FFD700]/30 bg-gradient-to-r from-[#FFF8E6] to-[#FFFBF0] mb-6">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#FFD700] to-[#FF9500] rounded-xl flex items-center justify-center">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-[#888888]">Pending Reward</p>
+                <p className="text-xl font-bold text-[#FF9500]">+{activeSession.coins_amount} coins</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* GPS Status */}
+          {location && (
+            <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+              <div className={`w-2 h-2 rounded-full ${isAtGym ? 'bg-[#00C853]' : 'bg-[#FF9500]'}`} />
+              <span className={isAtGym ? 'text-[#00C853]' : 'text-[#FF9500]'}>
+                {isAtGym ? 'You are at the gym' : `${formatDistance(distance)} from gym`}
+              </span>
+              <button onClick={refreshLocation} className="p-1 rounded-full active:bg-[#E5E7EB]">
+                <RefreshCw className={`w-3.5 h-3.5 text-[#0066FF] ${locationLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          )}
+
+          {/* Claim Button */}
+          <Button
+            onClick={handleClaimReward}
+            disabled={!isEligibleToClaim || claiming || !isAtGym}
+            className={`w-full py-6 text-lg rounded-xl font-bold shadow-xl transition-all ${
+              isEligibleToClaim && isAtGym
+                ? 'bg-gradient-to-r from-[#00C853] to-[#00A843] hover:from-[#00B548] hover:to-[#009940] text-white'
+                : 'bg-[#E5E7EB] text-[#888888] cursor-not-allowed'
+            }`}
+          >
+            {claiming ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Verifying Location...
+              </>
+            ) : !isAtGym ? (
+              <>
+                <MapPin className="w-5 h-5 mr-2" />
+                Return to Gym to Claim
+              </>
+            ) : isEligibleToClaim ? (
+              <>
+                <Gift className="w-5 h-5 mr-2" />
+                CLAIM {activeSession.coins_amount} COINS
+              </>
+            ) : (
+              <>
+                <Timer className="w-5 h-5 mr-2" />
+                Wait {remainingMinutes} min
+              </>
+            )}
+          </Button>
+
+          {/* Info Message */}
+          <p className="text-center text-[#888888] text-xs mt-4">
+            Stay at the gym for 30 minutes to earn your coins.
+            <br />
+            GPS verification required when claiming.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
 
   // Success Screen
   if (success) {
@@ -666,6 +906,7 @@ export default function CheckIn() {
             </p>
           </div>
         </div>
+
       </Layout>
     );
   }
@@ -708,6 +949,23 @@ export default function CheckIn() {
             {isAtGym ? "You're at the gym! Ready to go." : "Get closer to your gym"}
           </p>
         </div>
+
+        {/* Explore Gyms Link */}
+        <button
+          onClick={() => navigate('/gyms')}
+          className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-[#E6F0FF] to-[#F0F4FF] border border-[#0066FF]/20 rounded-xl hover:border-[#0066FF]/40 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#0066FF] rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-[#111111] font-semibold text-sm">Explore Gyms</p>
+              <p className="text-[#555555] text-xs">Find and discover new gyms nearby</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#0066FF]" />
+        </button>
 
         {/* Check-in Info */}
         <CheckinInfoBadge

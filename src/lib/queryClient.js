@@ -40,6 +40,10 @@ export const queryKeys = {
     nearby: (lat, lng, radius) => ['gyms', 'nearby', { lat, lng, radius }],
     leaderboard: (gymId, period) => ['gyms', gymId, 'leaderboard', period],
     members: (gymId) => ['gyms', gymId, 'members'],
+    // Smart search keys
+    smartSearch: (query, lat, lng) => ['gyms', 'smart-search', query, lat, lng],
+    preload: (lat, lng) => ['gyms', 'preload', lat, lng],
+    suggestions: (lat, lng) => ['gyms', 'suggestions', lat, lng],
   },
 
   // Connections queries
@@ -121,4 +125,8 @@ export const staleTimes = {
   connections: 60 * 1000,     // 1 minute - connections change occasionally
   notifications: 30 * 1000,   // 30 seconds - notifications should be timely
   challenges: 2 * 60 * 1000,  // 2 minutes - challenges don't change often
+  // Smart search stale times
+  searchResults: 5 * 60 * 1000,  // 5 minutes - search results cached longer
+  preload: 30 * 60 * 1000,       // 30 minutes - preloaded gyms
+  suggestions: 10 * 60 * 1000,   // 10 minutes - personalized suggestions
 };

@@ -2,7 +2,19 @@
 export { useCurrentUser, useUpdateUser, useUserProfile, useUserStats, useConnectionStatus, useDeleteUser } from './useUser';
 
 // Gym hooks
-export { useGym, useGyms, useSearchGyms, useNearbyGyms, useGymLeaderboard, useGymMembers } from './useGym';
+export {
+  useGym,
+  useGyms,
+  useSearchGyms,
+  useNearbyGyms,
+  useGymLeaderboard,
+  useGymMembers,
+  useSmartSearchGyms,
+  useRecordGymSelection,
+  useSubmitGym,
+  usePreloadNearbyGyms,
+  useGymSuggestions,
+} from './useGym';
 
 // Connection hooks
 export {
@@ -17,7 +29,7 @@ export {
 } from './useConnections';
 
 // Check-in hooks
-export { useCheckinFeed, useMyCheckins, useCreateCheckin, useTodayCheckins } from './useCheckins';
+export { useCheckinFeed, useMyCheckins, useCreateCheckin, useTodayCheckins, useActiveSession, useClaimReward } from './useCheckins';
 
 // Engagement hooks
 export {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X, Download, Share, Plus, ChevronDown } from "lucide-react";
+import { Download, Share, Plus, ChevronDown, Smartphone } from "lucide-react";
 
 // Detect platform
 const isIOS = () => {
@@ -23,9 +24,13 @@ const isStandalone = () => {
 
 const DISMISS_KEY = "gymgraph-pwa-dismissed";
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
-const SHOW_DELAY = 5000; // 5 seconds after page load
+const SHOW_DELAY = 30000; // 30 seconds after page load
+
+// Routes where we should NOT show the install prompt
+const EXCLUDED_ROUTES = ["/", "/auth/callback", "/onboarding"];
 
 export default function InstallPWA() {
+  const location = useLocation();
   const [showPrompt, setShowPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [platform, setPlatform] = useState(null); // 'ios' | 'android' | null
@@ -33,7 +38,13 @@ export default function InstallPWA() {
   const [isReady, setIsReady] = useState(false);
   const timeoutRef = useRef(null);
 
+  // Don't show on excluded routes (auth pages)
+  const isExcludedRoute = EXCLUDED_ROUTES.includes(location.pathname);
+
   useEffect(() => {
+    // Don't show if on excluded route
+    if (isExcludedRoute) return;
+
     // Don't show if already installed
     if (isStandalone()) return;
 
@@ -71,10 +82,16 @@ export default function InstallPWA() {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, []);
+  }, [isExcludedRoute]);
 
-  // Show prompt after short delay when ready
+  // Show prompt after delay when ready
   useEffect(() => {
+    // Don't show on excluded routes
+    if (isExcludedRoute) {
+      setShowPrompt(false);
+      return;
+    }
+
     if (isReady && !showPrompt) {
       timeoutRef.current = setTimeout(() => {
         setShowPrompt(true);
@@ -84,7 +101,7 @@ export default function InstallPWA() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isReady, showPrompt]);
+  }, [isReady, showPrompt, isExcludedRoute]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -103,69 +120,61 @@ export default function InstallPWA() {
     setShowPrompt(false);
   };
 
-  if (!showPrompt) return null;
+  if (!showPrompt || isExcludedRoute) return null;
 
   return (
     <div className="fixed bottom-20 lg:bottom-4 left-4 right-4 z-[9998] animate-slide-up">
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#0066FF] to-[#0052CC] px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-white font-semibold text-sm">Get the App</h3>
-              <p className="text-white/80 text-xs">Full experience on your phone</p>
-            </div>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
-            aria-label="Dismiss"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
-        </div>
-
-        {/* Content */}
+      <div className="max-w-md mx-auto bg-[#111111] rounded-2xl overflow-hidden border border-[#333333]">
+        {/* Slim Banner Design - looks like part of the app, not an ad */}
         <div className="p-4">
-          {platform === "android" && deferredPrompt ? (
-            // Android with install prompt available
-            <div className="space-y-3">
-              <p className="text-[#555555] text-sm">
-                Install GymGraph for quick access, offline features, and a full-screen experience.
-              </p>
-              <div className="flex gap-2">
+          <div className="flex items-center gap-4">
+            {/* App Icon */}
+            <div className="w-12 h-12 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#0066FF]/20">
+              <Smartphone className="w-6 h-6 text-white" />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-white font-semibold text-sm">Add GymGraph to Home</h3>
+              <p className="text-[#888888] text-xs mt-0.5">Quick access & offline workouts</p>
+            </div>
+
+            {/* Actions */}
+            {platform === "android" && deferredPrompt ? (
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
                   onClick={handleInstall}
-                  className="flex-1 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl h-11 font-medium"
+                  size="sm"
+                  className="bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg h-9 px-4 font-medium text-sm"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Install App
+                  <Download className="w-4 h-4 mr-1.5" />
+                  Install
                 </Button>
-                <Button
+                <button
                   onClick={handleDismiss}
-                  variant="ghost"
-                  className="text-[#888888] hover:text-[#555555] rounded-xl"
+                  className="text-[#666666] hover:text-[#888888] text-sm font-medium px-2 py-1"
                 >
-                  Not now
-                </Button>
+                  Later
+                </button>
               </div>
-            </div>
-          ) : platform === "ios" ? (
-            // iOS instructions
-            <div className="space-y-3">
-              <p className="text-[#555555] text-sm">
-                Add GymGraph to your home screen for the best experience.
-              </p>
+            ) : (
+              <button
+                onClick={handleDismiss}
+                className="text-[#666666] hover:text-[#888888] text-sm font-medium px-2 py-1 flex-shrink-0"
+              >
+                Later
+              </button>
+            )}
+          </div>
 
-              {/* Expandable steps */}
+          {/* iOS Instructions - Expandable */}
+          {platform === "ios" && (
+            <div className="mt-4">
               <button
                 onClick={() => setShowIOSSteps(!showIOSSteps)}
-                className="w-full flex items-center justify-between p-3 bg-[#F8F9FA] rounded-xl text-left hover:bg-[#F0F2F5] transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-[#1A1A1A] rounded-xl text-left hover:bg-[#222222] transition-colors"
               >
-                <span className="text-[#111111] font-medium text-sm">How to install</span>
+                <span className="text-white font-medium text-sm">How to install</span>
                 <ChevronDown
                   className={`w-5 h-5 text-[#888888] transition-transform ${
                     showIOSSteps ? "rotate-180" : ""
@@ -174,94 +183,55 @@ export default function InstallPWA() {
               </button>
 
               {showIOSSteps && (
-                <div className="space-y-3 pt-1">
+                <div className="space-y-3 pt-3">
                   {/* Step 1 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#0066FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <div className="flex items-center gap-3 bg-[#1A1A1A] rounded-xl p-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#0066FF] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                       1
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[#111111] text-sm font-medium">
-                        Tap the Share button
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 bg-[#F0F2F5] rounded-lg flex items-center justify-center">
-                          <Share className="w-4 h-4 text-[#0066FF]" />
-                        </div>
-                        <span className="text-[#888888] text-xs">
-                          at the bottom of Safari
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      <Share className="w-4 h-4 text-[#0066FF]" />
+                      <span className="text-white text-sm">Tap Share in Safari</span>
                     </div>
                   </div>
 
                   {/* Step 2 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#0066FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <div className="flex items-center gap-3 bg-[#1A1A1A] rounded-xl p-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#0066FF] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                       2
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[#111111] text-sm font-medium">
-                        Scroll and tap "Add to Home Screen"
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 bg-[#F0F2F5] rounded-lg flex items-center justify-center">
-                          <Plus className="w-4 h-4 text-[#555555]" />
-                        </div>
-                        <span className="text-[#888888] text-xs">
-                          in the share menu
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      <Plus className="w-4 h-4 text-[#888888]" />
+                      <span className="text-white text-sm">Add to Home Screen</span>
                     </div>
                   </div>
 
                   {/* Step 3 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#0066FF] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <div className="flex items-center gap-3 bg-[#1A1A1A] rounded-xl p-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#0066FF] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                       3
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[#111111] text-sm font-medium">
-                        Tap "Add" to confirm
-                      </p>
-                      <span className="text-[#888888] text-xs">
-                        GymGraph will appear on your home screen
-                      </span>
-                    </div>
+                    <span className="text-white text-sm flex-1">Tap Add to confirm</span>
                   </div>
+
+                  {/* Note about re-login */}
+                  <p className="text-[#666666] text-xs px-1">
+                    You may need to sign in once when opening the app.
+                  </p>
                 </div>
               )}
+            </div>
+          )}
 
-              <Button
-                onClick={handleDismiss}
-                variant="ghost"
-                className="w-full text-[#888888] hover:text-[#555555] rounded-xl"
-              >
-                Got it
-              </Button>
-            </div>
-          ) : platform === "android" ? (
-            // Android without prompt (fallback instructions)
-            <div className="space-y-3">
-              <p className="text-[#555555] text-sm">
-                Add GymGraph to your home screen for quick access.
+          {/* Android without install prompt - fallback */}
+          {platform === "android" && !deferredPrompt && (
+            <div className="mt-3 p-3 bg-[#1A1A1A] rounded-xl">
+              <p className="text-[#888888] text-sm">
+                Tap the <span className="text-white font-medium">menu</span> (three dots) and select{" "}
+                <span className="text-white font-medium">"Install App"</span>
               </p>
-              <div className="p-3 bg-[#F8F9FA] rounded-xl">
-                <p className="text-[#111111] text-sm">
-                  Tap the <span className="font-medium">menu icon</span> (three dots) in your browser and select{" "}
-                  <span className="font-medium">"Add to Home Screen"</span> or{" "}
-                  <span className="font-medium">"Install App"</span>
-                </p>
-              </div>
-              <Button
-                onClick={handleDismiss}
-                variant="ghost"
-                className="w-full text-[#888888] hover:text-[#555555] rounded-xl"
-              >
-                Got it
-              </Button>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
