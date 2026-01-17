@@ -1,7 +1,7 @@
 // OneSignal Push Notification Helper
 // Documentation: https://documentation.onesignal.com/docs/web-sdk
 
-const ONESIGNAL_APP_ID = "7b9c88ea-6d81-488d-9698-977bf995143f";
+const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
 let isInitialized = false;
 
