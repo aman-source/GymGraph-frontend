@@ -264,18 +264,19 @@ export default function Landing() {
             </div>
             <span className="text-xl font-bold text-[#111111]">GymGraph</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[#FF6B00] font-semibold text-sm hidden sm:flex items-center gap-1.5">
               <Flame className="w-4 h-4" />
               Launching Soon
             </span>
             <Button
               onClick={scrollToWaitlist}
-              className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold px-5 rounded-xl shadow-md shadow-[#0066FF]/20 transition-all duration-200 hover:-translate-y-0.5"
+              className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold px-3 sm:px-5 text-sm sm:text-base rounded-xl shadow-md shadow-[#0066FF]/20 transition-all duration-200 hover:-translate-y-0.5"
               data-testid="join-waitlist-nav"
             >
-              Become a Founder
-              <ArrowRight className="w-4 h-4 ml-1.5" />
+              <span className="hidden sm:inline">Become a Founder</span>
+              <span className="sm:hidden">Join</span>
+              <ArrowRight className="w-4 h-4 ml-1 sm:ml-1.5" />
             </Button>
           </div>
         </div>

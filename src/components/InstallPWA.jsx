@@ -27,7 +27,7 @@ const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SHOW_DELAY = 30000; // 30 seconds after page load
 
 // Routes where we should NOT show the install prompt
-const EXCLUDED_ROUTES = ["/", "/auth/callback", "/onboarding"];
+const EXCLUDED_ROUTES = ["/auth/callback", "/onboarding"];
 
 export default function InstallPWA() {
   const location = useLocation();
