@@ -2,28 +2,22 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { auth } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import {
   Trophy,
   Users,
   MapPin,
   Award,
   ArrowRight,
-  ArrowLeft,
-  Check,
-  Mail,
   X,
   Loader2,
-  Sparkles,
   Star,
-  Eye,
-  EyeOff,
   Flame,
-  Coins,
   CheckCircle2,
   Gift,
   Repeat,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 
 // GymGraph Mountain Logo Component
@@ -39,19 +33,15 @@ export default function Landing() {
   const [checking, setChecking] = useState(true);
   const [referralCode, setReferralCode] = useState(null);
 
-  // Auth modal state
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMethod, setAuthMethod] = useState(null);
-  const [animating, setAnimating] = useState(false);
-
-  // Form state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  // Waitlist form state
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistName, setWaitlistName] = useState("");
+  const [waitlistPhone, setWaitlistPhone] = useState("");
+  const [waitlistCity, setWaitlistCity] = useState("");
+  const [interestType, setInterestType] = useState("user");
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+  const [waitlistError, setWaitlistError] = useState("");
 
   // Hero journey steps - visual loop
   const journeySteps = [
@@ -100,88 +90,50 @@ export default function Landing() {
     setChecking(false);
   }, [searchParams]);
 
-  // Smooth transition helper
-  const transitionTo = (method) => {
-    setAnimating(true);
-    setLoading(false); // Reset loading state when switching methods
-    setError("");
-    setTimeout(() => {
-      setAuthMethod(method);
-      setAnimating(false);
-    }, 150);
-  };
+  // Waitlist form submission
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setWaitlistLoading(true);
+    setWaitlistError("");
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError("");
-    const { error } = await auth.signInWithGoogle();
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    }
-  };
+    try {
+      // Get UTM params from URL
+      const urlParams = new URLSearchParams(window.location.search);
 
-  const handleEmailSubmit = async () => {
-    setLoading(true);
-    setError("");
+      const { error } = await supabase
+        .from('waitlist')
+        .insert({
+          email: waitlistEmail.toLowerCase().trim(),
+          name: waitlistName.trim() || null,
+          phone: waitlistPhone.trim() || null,
+          city: waitlistCity.trim() || null,
+          interest_type: interestType,
+          referral_source: referralCode || null,
+          utm_source: urlParams.get('utm_source'),
+          utm_medium: urlParams.get('utm_medium'),
+          utm_campaign: urlParams.get('utm_campaign'),
+        });
 
-    if (isSignUp) {
-      const { data, error } = await auth.signUpWithEmail(email, password);
       if (error) {
-        if (error.message.includes("already registered")) {
-          setError("An account with this email already exists. Please sign in instead.");
+        if (error.code === '23505') { // Unique violation
+          setWaitlistError("You're already on the waitlist! We'll notify you when we launch.");
         } else {
-          setError(error.message);
+          throw error;
         }
-        setLoading(false);
-      } else if (data.user && !data.session) {
-        setMessage("Check your email for confirmation link");
-        setLoading(false);
-      } else if (data.session) {
-        resetAuthModal();
-        window.location.href = "/onboarding";
+      } else {
+        setWaitlistSuccess(true);
       }
-    } else {
-      const { data, error } = await auth.signInWithEmail(email, password);
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password");
-        } else if (error.message.includes("Email not confirmed")) {
-          setError("Please confirm your email first");
-        } else {
-          setError(error.message);
-        }
-        setLoading(false);
-      } else if (data.session) {
-        resetAuthModal();
-        window.location.href = "/dashboard";
-      }
+    } catch (err) {
+      setWaitlistError("Something went wrong. Please try again.");
+      console.error(err);
+    } finally {
+      setWaitlistLoading(false);
     }
   };
 
-  const handleMagicLink = async () => {
-    setLoading(true);
-    setError("");
-
-    const { error } = await auth.signInWithMagicLink(email);
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("Magic link sent! Check your email");
-    }
-    setLoading(false);
-  };
-
-  const resetAuthModal = () => {
-    setShowAuthModal(false);
-    setAuthMethod(null);
-    setEmail("");
-    setPassword("");
-    setError("");
-    setMessage("");
-    setIsSignUp(false);
-    setAnimating(false);
-    setLoading(false);
+  // Scroll to waitlist form
+  const scrollToWaitlist = () => {
+    document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (checking) {
@@ -200,17 +152,10 @@ export default function Landing() {
   const features = [
     { icon: MapPin, title: "GPS Check-ins", description: "We verify you're actually at the gym. No faking it." },
     { icon: Flame, title: "Streak System", description: "Miss a week? Lose your streak. Simple motivation." },
-    { icon: Coins, title: "Coin Rewards", description: "Every workout earns coins. Redeem for real stuff." },
+    { icon: Gift, title: "Earn Rewards", description: "Every workout earns rewards. Redeem for real stuff." },
     { icon: Users, title: "Gym Community", description: "See who's at your gym. Find workout partners." },
     { icon: Trophy, title: "Leaderboards", description: "Compete for #1 at your gym. Bragging rights included." },
     { icon: Award, title: "Achievements", description: "Unlock badges. Show off your consistency." }
-  ];
-
-  const howItWorks = [
-    { step: "01", title: "Sign Up", desc: "30 seconds. Free forever.", icon: Sparkles },
-    { step: "02", title: "Find Your Gym", desc: "We have every gym in India.", icon: MapPin },
-    { step: "03", title: "Check In", desc: "GPS proves you showed up.", icon: CheckCircle2 },
-    { step: "04", title: "Get Rewarded", desc: "Coins, badges, bragging rights.", icon: Trophy },
   ];
 
   const testimonials = [
@@ -310,232 +255,6 @@ export default function Landing() {
         }
       `}</style>
 
-      {/* Auth Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-            onClick={resetAuthModal}
-          />
-
-          {/* Modal */}
-          <div data-testid="auth-modal" className={`relative bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transition-all duration-300 ${animating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-            {/* Close button */}
-            <button
-              onClick={resetAuthModal}
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#F0F2F5] hover:bg-[#E5E7EB] transition-colors"
-            >
-              <X className="w-4 h-4 text-[#555555]" />
-            </button>
-
-            {/* Content */}
-            <div className="p-8">
-              {!authMethod ? (
-                // Method Selection
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-[#0066FF]/20">
-                      <GymGraphLogo className="w-9 h-9" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#111111]">Join GymGraph</h2>
-                    <p className="text-[#555555] mt-2">Start earning coins for your workouts</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Google - Primary */}
-                    <Button
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="w-full h-14 bg-white border-2 border-[#E5E7EB] text-[#111111] hover:border-[#0066FF] hover:shadow-md rounded-2xl font-medium flex items-center justify-center gap-3 transition-all duration-200"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-[#0066FF]" />
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                          </svg>
-                          Continue with Google
-                        </>
-                      )}
-                    </Button>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-[#E5E7EB]" />
-                      </div>
-                      <div className="relative flex justify-center">
-                        <span className="px-4 bg-white text-[#888888] text-sm">or continue with</span>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => transitionTo('email')}
-                      data-testid="email-tab"
-                      className="w-full h-12 bg-[#F8F9FA] border border-[#E5E7EB] text-[#111111] hover:bg-[#F0F2F5] hover:border-[#0066FF]/50 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Email
-                    </Button>
-
-                    <Button
-                      onClick={() => transitionTo('magic')}
-                      variant="ghost"
-                      className="w-full h-12 text-[#0066FF] hover:bg-[#E6F0FF] rounded-xl font-medium flex items-center justify-center gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Use Magic Link
-                    </Button>
-                  </div>
-
-                  {error && (
-                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
-                      <p className="text-red-600 text-sm text-center">{error}</p>
-                    </div>
-                  )}
-
-                  <p className="text-center text-xs text-[#888888]">
-                    By continuing, you agree to our Terms of Service and Privacy Policy
-                  </p>
-                </div>
-              ) : authMethod === 'email' ? (
-                // Email Auth
-                <div className="space-y-6">
-                  <button
-                    onClick={() => { transitionTo(null); setError(""); setMessage(""); }}
-                    className="flex items-center gap-2 text-[#555555] hover:text-[#0066FF] transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back</span>
-                  </button>
-
-                  <div className="text-center">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#8B5CF6]/20">
-                      <Mail className="w-7 h-7 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#111111]">
-                      {isSignUp ? "Create account" : "Welcome back"}
-                    </h2>
-                    <p className="text-[#555555] mt-2">
-                      {isSignUp ? "Sign up with email and password" : "Sign in to continue"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-[#555555] mb-1.5 block">Email</label>
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="h-14 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
-                        data-testid="email-input"
-                        autoFocus
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-[#555555] mb-1.5 block">Password</label>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Enter password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="h-14 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl pr-12"
-                          data-testid="password-input"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#555555]"
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleEmailSubmit}
-                      disabled={loading || !email || !password}
-                      data-testid="submit-auth"
-                      className="w-full h-14 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl font-semibold text-lg transition-all duration-200 disabled:opacity-50"
-                    >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? "Create Account" : "Sign In")}
-                    </Button>
-
-                    <p className="text-center text-[#555555] text-sm">
-                      {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                      <button
-                        onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
-                        className="text-[#0066FF] font-semibold hover:underline"
-                      >
-                        {isSignUp ? "Sign In" : "Sign Up"}
-                      </button>
-                    </p>
-                  </div>
-
-                  {error && <div data-testid="auth-error" className="p-3 bg-red-50 border border-red-100 rounded-xl"><p className="text-red-600 text-sm text-center">{error}</p></div>}
-                  {message && <div data-testid="auth-message" className="p-3 bg-green-50 border border-green-100 rounded-xl"><p className="text-green-600 text-sm text-center">{message}</p></div>}
-                </div>
-              ) : (
-                // Magic Link
-                <div className="space-y-6">
-                  <button
-                    onClick={() => { transitionTo(null); setError(""); setMessage(""); }}
-                    className="flex items-center gap-2 text-[#555555] hover:text-[#0066FF] transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back</span>
-                  </button>
-
-                  <div className="text-center">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#FF9500] to-[#FF6B00] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF9500]/20">
-                      <Sparkles className="w-7 h-7 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#111111]">Magic Link</h2>
-                    <p className="text-[#555555] mt-2">Sign in without a password</p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-[#555555] mb-1.5 block">Email</label>
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="h-14 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
-                        autoFocus
-                      />
-                    </div>
-                    <Button
-                      onClick={handleMagicLink}
-                      disabled={loading || !email}
-                      className="w-full h-14 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl font-semibold text-lg transition-all duration-200 disabled:opacity-50"
-                    >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Send Magic Link"}
-                    </Button>
-                  </div>
-
-                  {error && <div className="p-3 bg-red-50 border border-red-100 rounded-xl"><p className="text-red-600 text-sm text-center">{error}</p></div>}
-                  {message && (
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-xl text-center">
-                      <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                      <p className="text-green-700 font-medium">{message}</p>
-                      <p className="text-green-600 text-sm mt-1">Check your inbox and click the link</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E5E7EB]/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -546,19 +265,16 @@ export default function Landing() {
             <span className="text-xl font-bold text-[#111111]">GymGraph</span>
           </div>
           <div className="flex items-center gap-3">
+            <span className="text-[#FF6B00] font-semibold text-sm hidden sm:flex items-center gap-1.5">
+              <Flame className="w-4 h-4" />
+              Launching Soon
+            </span>
             <Button
-              onClick={() => setShowAuthModal(true)}
-              variant="ghost"
-              className="text-[#555555] hover:text-[#111111] font-medium hidden sm:flex"
-            >
-              Sign In
-            </Button>
-            <Button
-              onClick={() => setShowAuthModal(true)}
+              onClick={scrollToWaitlist}
               className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold px-5 rounded-xl shadow-md shadow-[#0066FF]/20 transition-all duration-200 hover:-translate-y-0.5"
-              data-testid="login-button-nav"
+              data-testid="join-waitlist-nav"
             >
-              Get Started
+              Become a Founder
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </div>
@@ -574,7 +290,7 @@ export default function Landing() {
                 <Gift className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-white text-sm font-medium">
-                You've been invited! Sign up now and you both get <strong>100 bonus coins</strong>
+                You've been invited! Join as a <strong>Founding Member</strong> before spots fill up
               </span>
             </div>
             <button
@@ -601,6 +317,11 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative">
           {/* Main Hero Content */}
           <div className="text-center mb-12">
+            {/* Coming Soon Badge */}
+            <div className="inline-flex items-center gap-2 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-full px-4 py-2 mb-6">
+              <Flame className="w-4 h-4 text-[#FF6B00]" />
+              <span className="text-[#FF6B00] font-semibold text-sm">Overwhelmed with demand — App launching soon!</span>
+            </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111111] mb-6 leading-[1.1]">
               Finally, a reason to
               <span className="text-[#0066FF]"> actually go</span> to the gym
@@ -609,12 +330,12 @@ export default function Landing() {
               Turn every workout into rewards. Compete with friends. Get free supplements.
             </p>
             <Button
-              onClick={() => setShowAuthModal(true)}
+              onClick={scrollToWaitlist}
               size="lg"
               className="bg-[#0066FF] hover:bg-[#0052CC] text-white text-lg px-10 py-6 rounded-xl font-semibold shadow-lg shadow-[#0066FF]/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#0066FF]/30"
-              data-testid="get-started-button"
+              data-testid="join-waitlist-hero"
             >
-              Start Free
+              Join the Waitlist
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
@@ -775,6 +496,143 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Waitlist Section */}
+      <section id="waitlist-form" className="py-20 px-6 bg-[#F8F9FA]">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-[#FF6B00]/10 rounded-full px-4 py-2 mb-4">
+              <Flame className="w-4 h-4 text-[#FF6B00]" />
+              <span className="text-[#FF6B00] font-semibold text-sm">Limited Founding Member Spots</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] mb-4">
+              We're Almost Ready
+            </h2>
+            <p className="text-lg text-[#555555]">
+              The response has been incredible. We're working hard to launch and can't wait to have you.
+              Join as a <strong>Founding Member</strong> and be first in line.
+            </p>
+          </div>
+
+          {waitlistSuccess ? (
+            <div className="bg-white rounded-2xl p-8 border border-[#E5E7EB] text-center">
+              <div className="w-16 h-16 bg-[#00C853]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8 text-[#00C853]" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#111111] mb-2">You're a Founding Member!</h3>
+              <p className="text-[#555555] mb-6">
+                We'll notify you the moment we launch. As a Founding Member, you'll get exclusive early access and special perks.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-[#0066FF]">
+                <Award className="w-5 h-5" />
+                <span className="font-semibold">Founding Member Status Secured</span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-8 border border-[#E5E7EB]">
+              <form onSubmit={handleWaitlistSubmit} className="space-y-5">
+                <div>
+                  <label className="text-sm font-medium text-[#555555] mb-1.5 block">Email Address *</label>
+                  <Input
+                    type="email"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
+                  />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-[#555555] mb-1.5 block">Your Name</label>
+                    <Input
+                      type="text"
+                      value={waitlistName}
+                      onChange={(e) => setWaitlistName(e.target.value)}
+                      placeholder="John Doe"
+                      className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#555555] mb-1.5 block">Phone Number</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
+                      <Input
+                        type="tel"
+                        value={waitlistPhone}
+                        onChange={(e) => setWaitlistPhone(e.target.value)}
+                        placeholder="+91 98765 43210"
+                        className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-[#555555] mb-1.5 block">City</label>
+                  <Input
+                    type="text"
+                    value={waitlistCity}
+                    onChange={(e) => setWaitlistCity(e.target.value)}
+                    placeholder="Mumbai, Delhi, Bangalore, etc."
+                    className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-[#555555] mb-2 block">I am a...</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: 'user', label: 'Fitness Enthusiast' },
+                      { value: 'gym_owner', label: 'Gym Owner' },
+                      { value: 'partner', label: 'Brand Partner' }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setInterestType(option.value)}
+                        className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                          interestType === option.value
+                            ? 'bg-[#0066FF] text-white'
+                            : 'bg-[#F8F9FA] text-[#555555] hover:bg-[#E5E7EB]'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {waitlistError && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-amber-700 text-sm text-center">{waitlistError}</p>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={waitlistLoading || !waitlistEmail}
+                  className="w-full h-14 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl font-semibold text-lg"
+                >
+                  {waitlistLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Award className="w-5 h-5 mr-2" />
+                      Become a Founding Member
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-center text-xs text-[#888888]">
+                  We'll only email you when we launch. No spam, ever.
+                </p>
+              </form>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-[#0066FF] via-[#0052CC] to-[#003D99] relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -783,25 +641,25 @@ export default function Landing() {
         </div>
         <div className="max-w-3xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 mb-6">
-            <Coins className="w-4 h-4 text-white" />
-            <span className="text-white font-medium text-sm">Get 50 coins just for signing up</span>
+            <Flame className="w-4 h-4 text-white" />
+            <span className="text-white font-medium text-sm">Launching very soon — Don't miss out</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Stop Paying for a Gym You Don't Use
+            Founding Members Get In First
           </h2>
           <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-xl mx-auto">
-            Start earning coins with your very first check-in. Free protein, creatine, gym gear—it all starts now.
+            We've been overwhelmed by the response. Secure your spot as a Founding Member and be first to experience GymGraph.
           </p>
           <Button
-            onClick={() => setShowAuthModal(true)}
+            onClick={scrollToWaitlist}
             size="lg"
             className="bg-white text-[#0066FF] hover:bg-[#F8F9FA] text-lg px-10 py-6 rounded-xl font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5"
             data-testid="cta-button"
           >
-            Start Earning Free
+            Claim Your Spot
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
-          <p className="text-white/60 text-sm mt-6">No credit card required. Seriously, it's free.</p>
+          <p className="text-white/60 text-sm mt-6">Limited Founding Member spots available.</p>
         </div>
       </section>
 

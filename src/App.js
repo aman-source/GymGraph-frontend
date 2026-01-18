@@ -39,6 +39,9 @@ const Privacy = lazy(() => import("@/pages/Privacy"));
 const SuperAdminDashboard = lazy(() => import("@/pages/SuperAdminDashboard"));
 const GymAdminDashboard = lazy(() => import("@/pages/GymAdminDashboard"));
 
+// Coming Soon Page - shown for protected routes during waitlist mode
+const ComingSoon = lazy(() => import("@/pages/ComingSoon"));
+
 // DevTools - Only loaded in development
 const LazyDevtools = lazy(() =>
   import("@tanstack/react-query-devtools").then(m => ({ default: m.ReactQueryDevtools }))
@@ -342,47 +345,11 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// Protected Route Component - handles auth and onboarding checks
+// Protected Route Component - WAITLIST MODE: Show Coming Soon page
+// During the waitlist period, all protected routes show the ComingSoon page
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, user, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/", { replace: true });
-    }
-  }, [isLoading, isAuthenticated, navigate]);
-
-  // Show shimmer skeleton while checking auth
-  if (isLoading) {
-    return <PageLoader />;
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // Check onboarding status and redirect accordingly
-  if (location.pathname === "/onboarding") {
-    // If already onboarded, redirect to dashboard
-    if (user?.onboarding_completed) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    // If on onboarding page and not onboarded (or user is null), allow access
-  } else {
-    // If not on onboarding and not onboarded, redirect to onboarding
-    // Only redirect if we have the user object and they haven't completed onboarding
-    if (user && !user.onboarding_completed) {
-      return <Navigate to="/onboarding" replace />;
-    }
-    // If user is null (profile doesn't exist yet), also redirect to onboarding
-    if (!user) {
-      return <Navigate to="/onboarding" replace />;
-    }
-  }
-
-  return children;
+  // Waitlist mode - show Coming Soon page for all protected routes
+  return <ComingSoon />;
 };
 
 // Scroll to top on route change
