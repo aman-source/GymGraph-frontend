@@ -8,12 +8,12 @@ import { toast } from 'sonner';
  */
 export function useBadges() {
   return useQuery({
-    queryKey: ['badges', 'all'],
+    queryKey: queryKeys.badges.list(),
     queryFn: async () => {
       const { data } = await api.get('/badges');
       return data;
     },
-    staleTime: staleTimes.badges || 5 * 60 * 1000, // 5 minutes
+    staleTime: staleTimes.badges,
   });
 }
 
@@ -22,12 +22,12 @@ export function useBadges() {
  */
 export function useMyBadges() {
   return useQuery({
-    queryKey: ['badges', 'me'],
+    queryKey: queryKeys.badges.mine(),
     queryFn: async () => {
       const { data } = await api.get('/badges/me');
       return data;
     },
-    staleTime: staleTimes.badges || 5 * 60 * 1000,
+    staleTime: staleTimes.badges,
   });
 }
 
@@ -36,12 +36,12 @@ export function useMyBadges() {
  */
 export function useBadgeProgress() {
   return useQuery({
-    queryKey: ['badges', 'progress'],
+    queryKey: queryKeys.badges.progress(),
     queryFn: async () => {
       const { data } = await api.get('/badges/progress');
       return data;
     },
-    staleTime: 60 * 1000, // 1 minute - refresh more often for progress
+    staleTime: staleTimes.badges,
   });
 }
 
@@ -50,12 +50,12 @@ export function useBadgeProgress() {
  */
 export function useNextBadge() {
   return useQuery({
-    queryKey: ['badges', 'next'],
+    queryKey: queryKeys.badges.next(),
     queryFn: async () => {
       const { data } = await api.get('/badges/next');
       return data;
     },
-    staleTime: 60 * 1000,
+    staleTime: staleTimes.badges,
   });
 }
 
@@ -72,7 +72,7 @@ export function useCheckBadges() {
     },
     onSuccess: (data) => {
       // Invalidate badge queries to refresh
-      queryClient.invalidateQueries({ queryKey: ['badges'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.badges.all });
       // Also refresh user data as badges are stored there too
       queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });
 

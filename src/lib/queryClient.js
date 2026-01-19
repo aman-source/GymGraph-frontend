@@ -113,6 +113,15 @@ export const queryKeys = {
     store: () => ['coins', 'store'],
     challengePool: (challengeId) => ['coins', 'challenge-pool', challengeId],
   },
+
+  // Badges queries
+  badges: {
+    all: ['badges'],
+    list: () => ['badges', 'all'],
+    mine: () => ['badges', 'me'],
+    progress: () => ['badges', 'progress'],
+    next: () => ['badges', 'next'],
+  },
 };
 
 // Stale time configurations by data type
@@ -125,6 +134,7 @@ export const staleTimes = {
   connections: 60 * 1000,     // 1 minute - connections change occasionally
   notifications: 30 * 1000,   // 30 seconds - notifications should be timely
   challenges: 2 * 60 * 1000,  // 2 minutes - challenges don't change often
+  badges: 5 * 60 * 1000,      // 5 minutes - badges don't change often
   // Smart search stale times
   searchResults: 5 * 60 * 1000,  // 5 minutes - search results cached longer
   preload: 30 * 60 * 1000,       // 30 minutes - preloaded gyms

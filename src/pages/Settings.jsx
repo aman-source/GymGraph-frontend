@@ -211,7 +211,7 @@ export default function Settings() {
   return (
     <Layout user={user}>
       <div className="max-w-2xl mx-auto space-y-6" data-testid="settings-page">
-        {/* Header */}
+        {/* Header - Blended with background */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#111111]">Settings</h1>

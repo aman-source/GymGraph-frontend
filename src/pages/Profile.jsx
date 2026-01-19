@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -222,13 +222,16 @@ const groupCheckinsByDate = (checkins) => {
 
 export default function Profile() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: gym } = useGym(user?.primary_gym_id);
   const { data: checkinsData, isLoading: checkinsLoading } = useMyCheckins(50);
   const updateUserMutation = useUpdateUser();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("feed");
+  // Check for state-based tab navigation from Dashboard
+  const initialTab = location.state?.tab || "feed";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedBadge, setSelectedBadge] = useState(null); // For badge modal
   const [editData, setEditData] = useState({
     display_name: "",
@@ -862,79 +865,274 @@ export default function Profile() {
         })()}
 
         {/* Stats Tab */}
-        {activeTab === "stats" && (
+        {activeTab === "stats" && (() => {
+          // Calculate workout type distribution from checkins
+          const workoutDistribution = checkins.reduce((acc, checkin) => {
+            const type = checkin.workout_type || "Other";
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+          }, {});
+          const totalWorkouts = Object.values(workoutDistribution).reduce((a, b) => a + b, 0);
+          const sortedWorkouts = Object.entries(workoutDistribution)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5);
+
+          // Calculate weekly check-in pattern (last 12 weeks)
+          const weeklyData = Array(12).fill(0);
+          const now = new Date();
+          checkins.forEach(checkin => {
+            const checkinDate = new Date(checkin.checked_in_at);
+            const weeksAgo = Math.floor((now - checkinDate) / (7 * 24 * 60 * 60 * 1000));
+            if (weeksAgo >= 0 && weeksAgo < 12) {
+              weeklyData[11 - weeksAgo]++;
+            }
+          });
+          const maxWeekly = Math.max(...weeklyData, 1);
+
+          // Calculate challenges stats
+          const challengesWon = user?.challenges_won || 0;
+          const challengesJoined = user?.challenges_joined || 0;
+          const winRate = challengesJoined > 0 ? Math.round((challengesWon / challengesJoined) * 100) : 0;
+
+          // Calculate actual earned badges count
+          const actualEarnedBadges = Object.entries(badgeData).filter(
+            ([id, badge]) => isBadgeEarned(id, badge, user, earnedBadges)
+          ).length;
+
+          return (
           <div className="space-y-4">
+            {/* Stats Overview Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="card-premium bg-gradient-to-br from-[#E6F0FF] to-white">
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 bg-[#0066FF] rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold text-[#111111]">{user?.total_sessions || 0}</p>
+                  <p className="text-sm text-[#555555]">Total Sessions</p>
+                </CardContent>
+              </Card>
+              <Card className="card-premium bg-gradient-to-br from-[#FFF0EB] to-white">
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 bg-[#FF6B35] rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <Flame className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold text-[#111111]">{user?.longest_streak || 0}<span className="text-sm">w</span></p>
+                  <p className="text-sm text-[#555555]">Best Streak</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Weekly Activity Chart */}
             <Card className="card-premium">
               <CardContent className="p-5">
-                <h3 className="font-semibold text-[#111111] mb-4">Performance</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-[#0066FF]" />
+                    <h3 className="font-semibold text-[#111111]">Weekly Activity</h3>
+                  </div>
+                  <span className="text-xs text-[#888888]">Last 12 weeks</span>
+                </div>
+                <div className="flex items-end gap-1 h-24 mb-2">
+                  {weeklyData.map((count, index) => (
+                    <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full rounded-t-md transition-all duration-300"
+                        style={{
+                          height: `${Math.max((count / maxWeekly) * 100, 8)}%`,
+                          backgroundColor: count > 0 ? '#0066FF' : '#E5E7EB',
+                          opacity: count > 0 ? (0.4 + (count / maxWeekly) * 0.6) : 1
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between text-xs text-[#888888]">
+                  <span>12w ago</span>
+                  <span>This week</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Workout Distribution */}
+            <Card className="card-premium">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Dumbbell className="w-5 h-5 text-[#8B5CF6]" />
+                  <h3 className="font-semibold text-[#111111]">Workout Breakdown</h3>
+                </div>
+                {sortedWorkouts.length > 0 ? (
+                  <div className="space-y-3">
+                    {sortedWorkouts.map(([type, count], index) => {
+                      const percentage = Math.round((count / totalWorkouts) * 100);
+                      const workout = workoutIcons[type] || workoutIcons.default;
+                      const WorkoutIcon = workout.icon;
+                      const colors = ['#0066FF', '#00C853', '#FF9500', '#8B5CF6', '#FF6B35'];
+                      return (
+                        <div key={type}>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <WorkoutIcon className="w-4 h-4" style={{ color: colors[index] }} />
+                              <span className="text-sm font-medium text-[#333333]">{type}</span>
+                            </div>
+                            <span className="text-sm text-[#555555]">{count} ({percentage}%)</span>
+                          </div>
+                          <div className="w-full bg-[#F0F2F5] rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${percentage}%`, backgroundColor: colors[index] }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-[#888888] text-sm">No workout data yet</p>
+                    <p className="text-[#AAAAAA] text-xs mt-1">Start checking in to see your breakdown</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Challenges & Achievements */}
+            <Card className="card-premium">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy className="w-5 h-5 text-[#FFB800]" />
+                  <h3 className="font-semibold text-[#111111]">Challenges</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="text-center p-3 bg-[#F8F9FA] rounded-xl">
+                    <Target className="w-5 h-5 text-[#0066FF] mx-auto mb-1" />
+                    <p className="text-xl font-bold text-[#111111]">{challengesJoined}</p>
+                    <p className="text-xs text-[#888888]">Joined</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#FFF8E6] rounded-xl">
+                    <Trophy className="w-5 h-5 text-[#FFB800] mx-auto mb-1" />
+                    <p className="text-xl font-bold text-[#111111]">{challengesWon}</p>
+                    <p className="text-xs text-[#888888]">Won</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#E6FFF5] rounded-xl">
+                    <TrendingUp className="w-5 h-5 text-[#00C853] mx-auto mb-1" />
+                    <p className="text-xl font-bold text-[#111111]">{winRate}%</p>
+                    <p className="text-xs text-[#888888]">Win Rate</p>
+                  </div>
+                </div>
+                {/* Win rate bar */}
+                {challengesJoined > 0 && (
+                  <div>
+                    <div className="flex justify-between text-xs text-[#888888] mb-1">
+                      <span>Win Rate Progress</span>
+                      <span>{challengesWon}/{challengesJoined}</span>
+                    </div>
+                    <div className="w-full bg-[#F0F2F5] rounded-full h-2">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FF9500] transition-all duration-500"
+                        style={{ width: `${winRate}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Badges Progress */}
+            <Card className="card-premium">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-[#8B5CF6]" />
+                    <h3 className="font-semibold text-[#111111]">Badges Progress</h3>
+                  </div>
+                  <span className="text-sm font-medium text-[#0066FF]">{actualEarnedBadges}/{Object.keys(badgeData).length}</span>
+                </div>
+                <div className="w-full bg-[#F0F2F5] rounded-full h-3 mb-3">
+                  <div
+                    className="h-3 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#0066FF] transition-all duration-500"
+                    style={{ width: `${(actualEarnedBadges / Object.keys(badgeData).length) * 100}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-[#F8F9FA] rounded-lg">
+                    <p className="text-lg font-bold text-[#111111]">{Object.values(badgeData).filter(b => b.type === 'total_sessions').length}</p>
+                    <p className="text-xs text-[#888888]">Session Badges</p>
+                  </div>
+                  <div className="text-center p-2 bg-[#F8F9FA] rounded-lg">
+                    <p className="text-lg font-bold text-[#111111]">{Object.values(badgeData).filter(b => b.type === 'current_streak').length}</p>
+                    <p className="text-xs text-[#888888]">Streak Badges</p>
+                  </div>
+                  <div className="text-center p-2 bg-[#F8F9FA] rounded-lg">
+                    <p className="text-lg font-bold text-[#111111]">{Object.values(badgeData).filter(b => b.type === 'challenges_won').length}</p>
+                    <p className="text-xs text-[#888888]">Challenge Badges</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Stats */}
+            <Card className="card-premium">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity className="w-5 h-5 text-[#00C853]" />
+                  <h3 className="font-semibold text-[#111111]">Performance</h3>
+                </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-[#E6F0FF] rounded-xl flex items-center justify-center">
                         <TrendingUp className="w-5 h-5 text-[#0066FF]" />
                       </div>
-                      <span className="text-[#555555]">Consistency Score</span>
+                      <div>
+                        <span className="text-[#333333] font-medium">Consistency Score</span>
+                        <p className="text-xs text-[#888888]">Weekly check-in rate</p>
+                      </div>
                     </div>
-                    <span className="text-lg font-semibold text-[#111111]">{Math.round(user?.consistency_score || 0)}%</span>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-[#111111]">{Math.round(user?.consistency_score || 0)}%</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="w-full bg-[#F0F2F5] rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#0066FF] to-[#00C853] transition-all duration-500"
+                      style={{ width: `${Math.round(user?.consistency_score || 0)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-[#FFF0EB] rounded-xl flex items-center justify-center">
                         <Flame className="w-5 h-5 text-[#FF6B35]" />
                       </div>
-                      <span className="text-[#555555]">Current Streak</span>
+                      <div>
+                        <span className="text-[#333333] font-medium">Current Streak</span>
+                        <p className="text-xs text-[#888888]">Consecutive weeks</p>
+                      </div>
                     </div>
                     <span className="text-lg font-semibold text-[#111111]">{user?.current_streak || 0} weeks</span>
                   </div>
-                  <div className="flex items-center justify-between">
+
+                  <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-[#E6FFF5] rounded-xl flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-[#00C853]" />
+                        <Clock className="w-5 h-5 text-[#00C853]" />
                       </div>
-                      <span className="text-[#555555]">Total Sessions</span>
-                    </div>
-                    <span className="text-lg font-semibold text-[#111111]">{user?.total_sessions || 0}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="card-premium">
-              <CardContent className="p-5">
-                <h3 className="font-semibold text-[#111111] mb-4">Achievements</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#FFF8E6] rounded-xl flex items-center justify-center">
-                        <Trophy className="w-5 h-5 text-[#FFB800]" />
+                      <div>
+                        <span className="text-[#333333] font-medium">Member Since</span>
+                        <p className="text-xs text-[#888888]">Account created</p>
                       </div>
-                      <span className="text-[#555555]">Challenges Won</span>
                     </div>
-                    <span className="text-lg font-semibold text-[#111111]">{user?.challenges_won || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#F0F2F5] rounded-xl flex items-center justify-center">
-                        <Target className="w-5 h-5 text-[#555555]" />
-                      </div>
-                      <span className="text-[#555555]">Challenges Joined</span>
-                    </div>
-                    <span className="text-lg font-semibold text-[#111111]">{user?.challenges_joined || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#E6F0FF] rounded-xl flex items-center justify-center">
-                        <Award className="w-5 h-5 text-[#0066FF]" />
-                      </div>
-                      <span className="text-[#555555]">Badges Earned</span>
-                    </div>
-                    <span className="text-lg font-semibold text-[#111111]">{earnedBadges.length} / {Object.keys(badgeData).length}</span>
+                    <span className="text-sm font-semibold text-[#111111]">
+                      {user?.created_at ? format(new Date(user.created_at), "MMM yyyy") : "—"}
+                    </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+          );
+        })()}
 
       </div>
     </Layout>

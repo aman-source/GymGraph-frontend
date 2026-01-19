@@ -461,22 +461,22 @@ export default function Dashboard() {
             suffix="d"
             label="Day Streak"
             color="#FF6B35"
-            onClick={() => navigate('/rewards')}
+            onClick={() => navigate('/profile', { state: { tab: 'stats' } })}
           />
           <StatCard
             icon={Calendar}
             value={user?.total_sessions || 0}
             label="Sessions"
             color="#0066FF"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/profile', { state: { tab: 'stats' } })}
           />
           <StatCard
             icon={TrendingUp}
             value={Math.round(user?.consistency_score || 0)}
             suffix="%"
-            label="Consistency"
+            label="This Week"
             color="#00C853"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/profile', { state: { tab: 'stats' } })}
           />
           <StatCard
             icon={Coins}

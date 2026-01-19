@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, Eye, Lock, Trash2 } from "lucide-react";
+import { ArrowLeft, Shield, Eye, Lock, Trash2, Globe, Database, Bell } from "lucide-react";
 
 // GymGraph Mountain Logo Component
 const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
@@ -14,25 +14,25 @@ export default function Privacy() {
   const highlights = [
     {
       icon: Eye,
-      title: "We Don't Track You",
+      title: "No Background Tracking",
       description:
-        "Location is only accessed during check-in. We never track you outside the app.",
+        "Location is only accessed during check-in. We never track you in the background.",
     },
     {
       icon: Lock,
-      title: "Data is Encrypted",
+      title: "Data Encrypted",
       description:
-        "Your personal information is encrypted and stored securely.",
+        "All data is encrypted in transit (HTTPS/TLS) and at rest.",
     },
     {
       icon: Trash2,
       title: "You Control Your Data",
       description:
-        "Delete your account anytime and we'll remove all your data.",
+        "Delete your account anytime and we'll remove all your data within 30 days.",
     },
     {
       icon: Shield,
-      title: "No Selling to Third Parties",
+      title: "No Selling Data",
       description:
         "We never sell or share your personal data with advertisers.",
     },
@@ -68,12 +68,7 @@ export default function Privacy() {
             Privacy Policy
           </h1>
           <p className="text-[#555555]">
-            Last updated:{" "}
-            {new Date().toLocaleDateString("en-IN", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+            Last updated: January 19, 2026
           </p>
         </div>
       </section>
@@ -114,7 +109,12 @@ export default function Privacy() {
                 GymGraph ("we," "our," or "us") is committed to protecting your
                 privacy. This Privacy Policy explains how we collect, use,
                 disclose, and safeguard your information when you use our mobile
-                application and website (collectively, the "Service").
+                application GymGraph and website (collectively, the "Service").
+              </p>
+              <p className="text-[#555555] leading-relaxed mt-4">
+                Please read this Privacy Policy carefully. By using the Service, you agree to the
+                collection and use of information in accordance with this policy. If you do not
+                agree with the terms of this Privacy Policy, please do not access the Service.
               </p>
             </section>
 
@@ -124,42 +124,44 @@ export default function Privacy() {
               </h2>
 
               <h3 className="text-lg font-medium text-[#111111] mt-6 mb-3">
-                2.1 Information You Provide
+                2.1 Personal Information You Provide
               </h3>
+              <p className="text-[#555555] leading-relaxed mb-4">
+                When you create an account or use our Service, we may collect:
+              </p>
               <ul className="list-disc pl-6 text-[#555555] space-y-2 mb-4">
                 <li>
-                  <strong>Account Information:</strong> Name, email address,
-                  phone number, profile picture
+                  <strong>Account Information:</strong> Email address, display name, and profile picture
                 </li>
                 <li>
-                  <strong>Fitness Data:</strong> Gym preferences, workout goals,
-                  check-in history
+                  <strong>Authentication Data:</strong> If you sign in using Google OAuth, we receive your basic profile information from Google
                 </li>
                 <li>
-                  <strong>Payment Information:</strong> When participating in
-                  stake challenges (processed by secure third-party providers)
+                  <strong>Fitness Data:</strong> Gym check-ins, workout sessions, streak counts, and fitness goals you choose to share
                 </li>
                 <li>
-                  <strong>Communications:</strong> Messages you send to other
-                  users or to us
+                  <strong>Social Information:</strong> Connections with other users, referral codes, and leaderboard participation
                 </li>
               </ul>
 
               <h3 className="text-lg font-medium text-[#111111] mt-6 mb-3">
                 2.2 Information Collected Automatically
               </h3>
+              <p className="text-[#555555] leading-relaxed mb-4">
+                When you use the Service, we automatically collect:
+              </p>
               <ul className="list-disc pl-6 text-[#555555] space-y-2 mb-4">
                 <li>
-                  <strong>Location Data:</strong> GPS coordinates during
-                  check-ins only
+                  <strong>Location Data:</strong> We collect your precise location <strong>only</strong> when you actively check in at a gym. Location is used solely to verify you are physically present at the gym location. We do not track your location in the background or when the app is closed.
                 </li>
                 <li>
-                  <strong>Device Information:</strong> Device type, operating
-                  system, unique device identifiers
+                  <strong>Device Information:</strong> Device type, operating system version, unique device identifiers, and mobile network information
                 </li>
                 <li>
-                  <strong>Usage Data:</strong> Features used, time spent, crash
-                  logs
+                  <strong>Usage Data:</strong> App interactions, features used, session duration, and crash reports
+                </li>
+                <li>
+                  <strong>Analytics Data:</strong> We use Mixpanel to collect anonymized usage analytics to improve the Service
                 </li>
               </ul>
             </section>
@@ -172,72 +174,79 @@ export default function Privacy() {
                 We use the information we collect to:
               </p>
               <ul className="list-disc pl-6 text-[#555555] space-y-2">
-                <li>Provide, maintain, and improve the Service</li>
-                <li>Verify your gym check-ins using GPS location</li>
-                <li>Process challenge participations and distribute rewards</li>
-                <li>Connect you with other users at your gym</li>
-                <li>Send you notifications about your activity and progress</li>
-                <li>Respond to your requests and support inquiries</li>
-                <li>Detect and prevent fraud or abuse</li>
-                <li>Comply with legal obligations</li>
+                <li><strong>Provide Services:</strong> Create and manage your account, process gym check-ins, track workouts, and maintain streaks</li>
+                <li><strong>Verify Check-ins:</strong> Use your location to confirm you are physically at a gym when checking in</li>
+                <li><strong>Social Features:</strong> Display leaderboards, enable connections between users, and facilitate challenges</li>
+                <li><strong>Rewards System:</strong> Manage the coin economy, process challenge rewards, and track referrals</li>
+                <li><strong>Improve the Service:</strong> Analyze usage patterns, fix bugs, and develop new features</li>
+                <li><strong>Communications:</strong> Send push notifications about your streaks, challenges, and app updates (with your consent)</li>
+                <li><strong>Security:</strong> Detect and prevent fraud, abuse, and security incidents</li>
               </ul>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                4. Location Data
+                4. Location Data - Important Details
               </h2>
               <p className="text-[#555555] leading-relaxed mb-4">
-                We take your location privacy seriously:
+                We take your location privacy very seriously:
               </p>
               <ul className="list-disc pl-6 text-[#555555] space-y-2">
                 <li>
-                  <strong>Check-in Only:</strong> We only access your location
-                  when you actively initiate a gym check-in
+                  <strong>Check-in Only:</strong> We only access your location when you actively initiate a gym check-in
                 </li>
                 <li>
-                  <strong>No Background Tracking:</strong> We never track your
-                  location in the background or when the app is closed
+                  <strong>No Background Tracking:</strong> We never track your location in the background or when the app is closed
                 </li>
                 <li>
-                  <strong>Gym Verification:</strong> Location is used solely to
-                  verify you are at a legitimate gym location
+                  <strong>Gym Verification:</strong> Location is used solely to verify you are at a legitimate gym location within the check-in radius
                 </li>
                 <li>
-                  <strong>Optional:</strong> You can use GymGraph without
-                  location permissions, but check-in features will be disabled
+                  <strong>You Can Disable:</strong> You can disable location permissions at any time through your device settings. Note that this will prevent gym check-in functionality.
                 </li>
               </ul>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                5. Information Sharing
+                5. How We Share Your Information
               </h2>
               <p className="text-[#555555] leading-relaxed mb-4">
-                We do not sell your personal information. We may share your
-                information in the following circumstances:
+                We do not sell your personal information. We may share your information in these circumstances:
               </p>
-              <ul className="list-disc pl-6 text-[#555555] space-y-2">
-                <li>
-                  <strong>With Other Users:</strong> Your profile, check-ins,
-                  and achievements may be visible to other GymGraph users based
-                  on your privacy settings
-                </li>
-                <li>
-                  <strong>Service Providers:</strong> We work with trusted
-                  third-party services for hosting, analytics, and payment
-                  processing
-                </li>
-                <li>
-                  <strong>Legal Requirements:</strong> When required by law or
-                  to protect our rights
-                </li>
-                <li>
-                  <strong>Business Transfers:</strong> In connection with a
-                  merger, acquisition, or sale of assets
-                </li>
+
+              <h3 className="text-lg font-medium text-[#111111] mt-6 mb-3">
+                5.1 With Other Users
+              </h3>
+              <ul className="list-disc pl-6 text-[#555555] space-y-2 mb-4">
+                <li>Your display name, profile picture, and fitness achievements may be visible to other users on leaderboards and in challenges</li>
+                <li>Your gym check-in activity may be visible to your connections</li>
+                <li>You can control visibility settings in your profile</li>
               </ul>
+
+              <h3 className="text-lg font-medium text-[#111111] mt-6 mb-3">
+                5.2 With Service Providers
+              </h3>
+              <p className="text-[#555555] leading-relaxed mb-4">
+                We share information with trusted third-party service providers who perform services on our behalf:
+              </p>
+              <ul className="list-disc pl-6 text-[#555555] space-y-2 mb-4">
+                <li><strong>Supabase:</strong> Database and authentication services</li>
+                <li><strong>Mixpanel:</strong> Analytics and user behavior tracking</li>
+                <li><strong>Google Maps/Places:</strong> Location verification services</li>
+                <li><strong>OneSignal:</strong> Push notification delivery</li>
+                <li><strong>Railway:</strong> Backend hosting</li>
+                <li><strong>Vercel:</strong> Frontend hosting</li>
+              </ul>
+
+              <h3 className="text-lg font-medium text-[#111111] mt-6 mb-3">
+                5.3 For Legal Purposes
+              </h3>
+              <p className="text-[#555555] leading-relaxed">
+                We may disclose your information to comply with legal obligations, protect our rights,
+                privacy, safety, or property, respond to lawful requests from public authorities, or
+                in connection with a merger, acquisition, or sale of assets.
+              </p>
             </section>
 
             <section className="mb-10">
@@ -245,68 +254,69 @@ export default function Privacy() {
                 6. Data Security
               </h2>
               <p className="text-[#555555] leading-relaxed mb-4">
-                We implement appropriate technical and organizational measures
-                to protect your information:
+                We implement appropriate technical and organizational measures to protect your personal information:
               </p>
               <ul className="list-disc pl-6 text-[#555555] space-y-2">
-                <li>Encryption of data in transit and at rest</li>
-                <li>Regular security assessments and updates</li>
-                <li>Limited access to personal data on a need-to-know basis</li>
-                <li>Secure authentication and session management</li>
+                <li>Encryption of data in transit (HTTPS/TLS)</li>
+                <li>Encryption of sensitive data at rest</li>
+                <li>Secure authentication using industry-standard protocols (OAuth 2.0, JWT)</li>
+                <li>Regular security assessments</li>
+                <li>Access controls limiting employee access to personal data</li>
               </ul>
               <p className="text-[#555555] leading-relaxed mt-4">
-                However, no method of transmission over the Internet is 100%
-                secure. We cannot guarantee absolute security.
+                However, no method of transmission over the Internet or electronic storage is 100% secure.
+                We cannot guarantee absolute security.
               </p>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                7. Your Rights and Choices
+                7. Data Retention
               </h2>
-              <p className="text-[#555555] leading-relaxed mb-4">You have the right to:</p>
-              <ul className="list-disc pl-6 text-[#555555] space-y-2">
-                <li>
-                  <strong>Access:</strong> Request a copy of the personal data
-                  we hold about you
-                </li>
-                <li>
-                  <strong>Correction:</strong> Update or correct inaccurate
-                  information
-                </li>
-                <li>
-                  <strong>Deletion:</strong> Request deletion of your account
-                  and associated data
-                </li>
-                <li>
-                  <strong>Portability:</strong> Request your data in a portable
-                  format
-                </li>
-                <li>
-                  <strong>Opt-out:</strong> Unsubscribe from marketing
-                  communications
-                </li>
-                <li>
-                  <strong>Privacy Settings:</strong> Control who can see your
-                  profile and activity
-                </li>
-              </ul>
-              <p className="text-[#555555] leading-relaxed mt-4">
-                To exercise these rights, please contact us at
-                privacy@gymgraph.com or use the settings in the app.
+              <p className="text-[#555555] leading-relaxed mb-4">
+                We retain your personal information for as long as your account is active or as needed to
+                provide you services. You may request deletion of your account and associated data at any time.
               </p>
-            </section>
-
-            <section className="mb-10">
-              <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                8. Data Retention
-              </h2>
               <p className="text-[#555555] leading-relaxed">
-                We retain your information for as long as your account is active
-                or as needed to provide you services. If you delete your
-                account, we will delete your personal data within 30 days,
-                except where we are required to retain it for legal or
-                legitimate business purposes.
+                After account deletion:
+              </p>
+              <ul className="list-disc pl-6 text-[#555555] space-y-2 mt-2">
+                <li>Your personal data will be deleted within 30 days</li>
+                <li>Anonymized aggregate data may be retained for analytics purposes</li>
+                <li>Some information may be retained as required by law</li>
+              </ul>
+            </section>
+
+            <section className="mb-10">
+              <h2 className="text-2xl font-semibold text-[#111111] mb-4">
+                8. Your Rights and Choices
+              </h2>
+              <p className="text-[#555555] leading-relaxed mb-4">
+                Depending on your location, you may have the following rights:
+              </p>
+              <ul className="list-disc pl-6 text-[#555555] space-y-2">
+                <li>
+                  <strong>Access and Portability:</strong> You can access your personal data through the app's settings or by contacting us
+                </li>
+                <li>
+                  <strong>Correction:</strong> You can update your profile information directly in the app
+                </li>
+                <li>
+                  <strong>Deletion:</strong> You can request deletion of your account and personal data by contacting us
+                </li>
+                <li>
+                  <strong>Location Permissions:</strong> You can disable location permissions at any time through your device settings
+                </li>
+                <li>
+                  <strong>Push Notifications:</strong> You can opt out of push notifications through your device settings
+                </li>
+                <li>
+                  <strong>Marketing Communications:</strong> You can opt out of marketing emails by following the unsubscribe link
+                </li>
+              </ul>
+              <p className="text-[#555555] leading-relaxed mt-4">
+                To exercise these rights, please contact us at <span className="text-[#0066FF]">privacy@gymgraph.in</span> or
+                use the settings in the app.
               </p>
             </section>
 
@@ -315,36 +325,54 @@ export default function Privacy() {
                 9. Children's Privacy
               </h2>
               <p className="text-[#555555] leading-relaxed">
-                GymGraph is not intended for children under 13 years of age. We
-                do not knowingly collect personal information from children
-                under 13. If you believe we have collected information from a
-                child under 13, please contact us immediately.
+                The Service is not intended for children under 13 years of age. We do not knowingly collect
+                personal information from children under 13. If we learn we have collected personal information
+                from a child under 13, we will delete that information promptly. If you believe we have collected
+                information from a child under 13, please contact us immediately.
               </p>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                10. Changes to This Policy
+                10. International Data Transfers
               </h2>
               <p className="text-[#555555] leading-relaxed">
-                We may update this Privacy Policy from time to time. We will
-                notify you of any changes by posting the new policy on this page
-                and updating the "Last updated" date. We encourage you to review
-                this policy periodically.
+                Your information may be transferred to and processed in countries other than your country of
+                residence. These countries may have data protection laws different from your country. By using
+                the Service, you consent to the transfer of your information to these countries. We take steps
+                to ensure your data is treated securely and in accordance with this Privacy Policy.
               </p>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-semibold text-[#111111] mb-4">
-                11. Contact Us
+                11. Changes to This Privacy Policy
               </h2>
               <p className="text-[#555555] leading-relaxed">
-                If you have any questions about this Privacy Policy or our data
-                practices, please contact us at:
+                We may update this Privacy Policy from time to time. We will notify you of any changes by:
+              </p>
+              <ul className="list-disc pl-6 text-[#555555] space-y-2 mt-2">
+                <li>Posting the new Privacy Policy on this page</li>
+                <li>Updating the "Last updated" date</li>
+                <li>Sending a push notification for material changes</li>
+              </ul>
+              <p className="text-[#555555] leading-relaxed mt-4">
+                Your continued use of the Service after changes constitutes acceptance of the updated Privacy Policy.
+              </p>
+            </section>
+
+            <section className="mb-10">
+              <h2 className="text-2xl font-semibold text-[#111111] mb-4">
+                12. Contact Us
+              </h2>
+              <p className="text-[#555555] leading-relaxed">
+                If you have any questions or concerns about this Privacy Policy or our data practices,
+                please contact us:
               </p>
               <div className="mt-4 p-4 bg-[#F8F9FA] rounded-xl">
                 <p className="text-[#111111] font-medium">GymGraph</p>
-                <p className="text-[#0066FF]">privacy@gymgraph.com</p>
+                <p className="text-[#0066FF]">privacy@gymgraph.in</p>
+                <p className="text-[#555555] mt-2">Hyderabad, Telangana, India</p>
               </div>
             </section>
           </div>
