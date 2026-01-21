@@ -512,7 +512,7 @@ export default function Chest3D({
 }) {
   return (
     <div
-      className={`w-full h-[300px] ${className}`}
+      className={`w-full h-[300px] bg-transparent ${className}`}
       style={{ overflow: 'visible' }}
     >
       <Canvas

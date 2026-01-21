@@ -50,12 +50,11 @@ export default function LockedChest({ onClick, isUnlocked, userData, inline = fa
                 className="w-[300px] sm:w-[360px]"
               />
 
-              {/* Hover overlay */}
+              {/* Hover overlay - text only, no background */}
               <motion.div
-                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
               >
-                <div className="absolute inset-0 bg-black/20 rounded-xl" />
-                <span className="relative text-white font-semibold text-lg drop-shadow-lg">
+                <span className="text-white font-semibold text-lg drop-shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   Click to Open
                 </span>
               </motion.div>
