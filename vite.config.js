@@ -11,7 +11,9 @@ export default defineConfig({
       includeAssets: ['favicon.svg'],
       manifest: false, // Use existing manifest.json in public folder
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+        // Exclude large reward images from precaching (they're 2+ MB each)
+        globIgnores: ['**/tshirt.png', '**/hoodie.png', '**/sipper.png', '**/sleeveless.png'],
         // Don't precache index.html to ensure fresh auth state
         navigateFallback: null,
         // Runtime caching strategies
