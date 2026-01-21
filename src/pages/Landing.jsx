@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Phone,
 } from "lucide-react";
+import { MysteryBox } from "@/components/waitlist";
 
 // GymGraph Mountain Logo Component
 const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
@@ -387,6 +388,8 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Mystery Reward Box Section */}
+      <MysteryBox />
 
       {/* Features Section */}
       <section className="py-20 px-6 bg-[#F8F9FA]">
