@@ -520,7 +520,10 @@ export default function Chest3D({
         shadows
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
-        style={{ overflow: 'visible' }}
+        style={{ overflow: 'visible', background: 'transparent' }}
+        onCreated={({ gl }) => {
+          gl.setClearColor(0x000000, 0);
+        }}
       >
         <Suspense fallback={null}>
           {/* No fog - cleaner look */}

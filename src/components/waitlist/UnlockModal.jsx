@@ -77,7 +77,7 @@ export default function UnlockModal({ open, onClose, onSuccess, referralCode }) 
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -93,16 +93,16 @@ export default function UnlockModal({ open, onClose, onSuccess, referralCode }) 
 
           {/* Modal - hide scrollbar */}
           <motion.div
-            className="relative w-full sm:max-w-[400px] bg-white rounded-t-[28px] sm:rounded-[28px] overflow-hidden shadow-2xl max-h-[90vh] sm:max-h-[85vh]"
+            className="relative w-full max-w-[400px] bg-white rounded-[28px] overflow-hidden shadow-2xl max-h-[85vh]"
             style={{
               overflowY: 'auto',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
             }}
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             {/* Hide webkit scrollbar */}
             <style>{`
@@ -245,7 +245,6 @@ export default function UnlockModal({ open, onClose, onSuccess, referralCode }) 
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  autoFocus
                   className="w-full h-14 px-4 bg-[#F8F9FA] border-2 border-[#E5E7EB] rounded-2xl text-base text-[#111111] placeholder:text-[#999999] focus:border-[#0066FF] focus:ring-4 focus:ring-[#0066FF]/10 outline-none transition-all"
                 />
               </motion.div>
