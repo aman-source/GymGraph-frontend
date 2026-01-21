@@ -1,150 +1,207 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { triggerConfetti } from "./confetti";
+import { Sparkles } from "lucide-react";
+import Chest3D from "./Chest3D";
 
-const ANIMATION_DURATION = 3500; // Total animation time in ms
+const ANIMATION_DURATION = 4500;
 
 export default function ChestAnimation({ onComplete }) {
-  const [phase, setPhase] = useState("waiting"); // waiting -> shake -> open -> burst -> complete
+  const [phase, setPhase] = useState("intro"); // intro -> animating -> burst -> complete
+  const [showChest, setShowChest] = useState(false);
 
   useEffect(() => {
-    // Start shake after a brief pause
     const timers = [
-      setTimeout(() => setPhase("shake"), 300),
-      setTimeout(() => setPhase("open"), 1100),
-      setTimeout(() => setPhase("burst"), 1800),
+      setTimeout(() => {
+        setShowChest(true);
+        setPhase("animating");
+      }, 500),
+      setTimeout(() => setPhase("burst"), 3000),
       setTimeout(() => {
         triggerConfetti();
         setPhase("complete");
-      }, 2500),
+      }, 3500),
       setTimeout(onComplete, ANIMATION_DURATION)
     ];
 
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
 
+  const handleChestAnimationComplete = useCallback(() => {
+    // Chest opening animation finished
+  }, []);
+
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
+      className="fixed inset-0 z-[100] flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Radial gradient background */}
-      <div className="absolute inset-0 bg-gradient-radial from-[#FF9500]/20 via-transparent to-transparent" />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/95" />
 
-      {/* Tap instruction */}
-      {phase === "waiting" && (
-        <motion.p
-          className="absolute top-1/3 text-white/80 text-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          Get ready...
-        </motion.p>
+      {/* Radial glow background */}
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: "radial-gradient(circle at center, rgba(0,102,255,0.15) 0%, rgba(255,149,0,0.1) 30%, transparent 60%)"
+        }}
+        animate={phase !== "intro" ? { opacity: [0.3, 0.6, 0.3] } : { opacity: 0.2 }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+
+      {/* Light rays when opening */}
+      {(phase === "burst" || phase === "complete") && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute top-1/2 left-1/2 h-[200vh] w-3"
+              style={{
+                background: `linear-gradient(to top, transparent, ${i % 2 === 0 ? 'rgba(255,215,0,0.4)' : 'rgba(0,102,255,0.3)'}, transparent)`,
+                transformOrigin: "bottom center",
+              }}
+              initial={{ opacity: 0, rotate: i * 30, scaleY: 0 }}
+              animate={{ opacity: [0, 0.8, 0], scaleY: [0, 1.5, 2] }}
+              transition={{ duration: 1.5, delay: i * 0.03 }}
+            />
+          ))}
+        </div>
       )}
 
-      {/* Animated chest */}
-      <div className="relative">
-        {/* Glow effect */}
-        <motion.div
-          className="absolute inset-0 -m-20 bg-[#FFD700]/30 rounded-full blur-3xl"
-          animate={phase === "burst" || phase === "complete" ? { scale: [1, 2], opacity: [0.5, 0] } : {}}
-          transition={{ duration: 0.8 }}
-        />
-
-        {/* Chest container */}
-        <motion.div
-          className="relative w-64 h-64"
-          animate={
-            phase === "shake"
-              ? { rotate: [-5, 5, -5, 5, 0], x: [-10, 10, -10, 10, 0] }
-              : phase === "open"
-              ? { scale: [1, 1.1, 1] }
-              : phase === "burst"
-              ? { scale: [1, 1.3], y: -50 }
-              : {}
-          }
-          transition={{
-            duration: phase === "shake" ? 0.6 : 0.5,
-            ease: "easeInOut"
-          }}
-        >
-          {/* Chest base */}
-          <motion.div
-            className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#8B4513] to-[#654321] shadow-2xl overflow-hidden"
-            animate={phase === "burst" || phase === "complete" ? { opacity: 0 } : {}}
-          >
-            <div className="absolute inset-4 border-4 border-[#D4A574]/30 rounded-xl" />
-
-            {/* Chest lid (opens) */}
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center" style={{ overflow: 'visible' }}>
+        {/* Intro text */}
+        <AnimatePresence mode="wait">
+          {phase === "intro" && (
             <motion.div
-              className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-[#A0522D] to-[#8B4513] rounded-t-2xl origin-bottom"
-              style={{ transformStyle: "preserve-3d" }}
-              animate={
-                phase === "open" || phase === "burst" || phase === "complete"
-                  ? { rotateX: -120, y: -20 }
-                  : {}
-              }
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              key="intro"
+              className="text-center mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-              {/* Lock on lid */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-8 bg-[#FFD700] rounded-md shadow-lg" />
+              <p className="text-white/70 text-xl font-medium">
+                Unlocking your mystery reward...
+              </p>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Inner glow when opening */}
+        {/* 3D Chest */}
+        {showChest && phase !== "complete" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: phase === "burst" || phase === "complete" ? 0 : 1,
+              scale: phase === "burst" ? 0.9 : 1,
+              y: phase === "burst" ? 30 : 0
+            }}
+            transition={{ duration: 0.5 }}
+            className="relative"
+            style={{ overflow: 'visible' }}
+          >
+            {/* Glow behind chest */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-t from-[#FFD700] via-[#FF9500] to-transparent"
-              initial={{ opacity: 0 }}
-              animate={phase === "open" || phase === "burst" || phase === "complete" ? { opacity: 1 } : {}}
-              transition={{ duration: 0.3 }}
+              className="absolute inset-0 -m-20 rounded-full blur-3xl pointer-events-none"
+              style={{
+                background: "radial-gradient(circle, rgba(255,149,0,0.4) 0%, rgba(0,102,255,0.2) 50%, transparent 70%)"
+              }}
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.5, 1, 0.5]
+              }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+
+            <Chest3D
+              isAnimating={phase === "animating" || phase === "burst"}
+              onAnimationComplete={handleChestAnimationComplete}
+              showParticles={false}
+              className="w-[450px] h-[400px]"
             />
           </motion.div>
+        )}
 
-          {/* Burst particles */}
-          {(phase === "burst" || phase === "complete") && (
-            <>
-              {[...Array(12)].map((_, i) => (
+        {/* Burst particles */}
+        {(phase === "burst" || phase === "complete") && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            {[...Array(30)].map((_, i) => {
+              const angle = (i / 30) * Math.PI * 2;
+              const distance = 150 + Math.random() * 100;
+              const size = 6 + Math.random() * 10;
+              return (
                 <motion.div
                   key={i}
-                  className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full"
+                  className="absolute rounded-full"
                   style={{
-                    background: i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#FF9500' : '#0066FF'
+                    width: size,
+                    height: size,
+                    background:
+                      i % 4 === 0 ? "#FFD700" :
+                      i % 4 === 1 ? "#FF9500" :
+                      i % 4 === 2 ? "#0066FF" : "#FFFFFF"
                   }}
                   initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                   animate={{
-                    x: Math.cos(i * 30 * Math.PI / 180) * 200,
-                    y: Math.sin(i * 30 * Math.PI / 180) * 200 - 100,
+                    x: Math.cos(angle) * distance,
+                    y: Math.sin(angle) * distance - 30,
                     scale: 0,
                     opacity: 0
                   }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  transition={{
+                    duration: 0.8 + Math.random() * 0.4,
+                    ease: "easeOut"
+                  }}
                 />
-              ))}
-            </>
-          )}
-        </motion.div>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Text overlay */}
+        {/* Completion text */}
         <AnimatePresence>
           {phase === "complete" && (
             <motion.div
-              className="absolute inset-0 flex items-center justify-center"
+              className="flex flex-col items-center justify-center"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: "spring", bounce: 0.5 }}
             >
-              <div className="text-center">
-                <motion.div
-                  className="text-6xl mb-4"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 0.5, repeat: 2 }}
-                >
-                  🎉
-                </motion.div>
-                <h2 className="text-3xl font-bold text-white">Unlocked!</h2>
-              </div>
+              <motion.div
+                className="relative mb-6"
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 0.5, repeat: 3 }}
+              >
+                <Sparkles className="w-24 h-24 text-[#FFD700]" />
+                {/* Sparkle effects */}
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-3 h-3 bg-[#FFD700] rounded-full"
+                    style={{
+                      top: `${20 + Math.random() * 60}%`,
+                      left: `${20 + Math.random() * 60}%`,
+                    }}
+                    animate={{
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      delay: i * 0.15
+                    }}
+                  />
+                ))}
+              </motion.div>
+              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-3">
+                Reward Unlocked!
+              </h2>
+              <p className="text-white/60 text-lg">
+                See what you've won
+              </p>
             </motion.div>
           )}
         </AnimatePresence>

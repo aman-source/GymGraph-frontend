@@ -1,23 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
 import {
   Trophy,
   Users,
   MapPin,
   Award,
-  ArrowRight,
   X,
-  Loader2,
   Star,
   Flame,
-  CheckCircle2,
   Gift,
   Repeat,
   ChevronRight,
-  Phone,
 } from "lucide-react";
 import { MysteryBox } from "@/components/waitlist";
 
@@ -33,16 +26,6 @@ export default function Landing() {
   const [searchParams] = useSearchParams();
   const [checking, setChecking] = useState(true);
   const [referralCode, setReferralCode] = useState(null);
-
-  // Waitlist form state
-  const [waitlistEmail, setWaitlistEmail] = useState("");
-  const [waitlistName, setWaitlistName] = useState("");
-  const [waitlistPhone, setWaitlistPhone] = useState("");
-  const [waitlistCity, setWaitlistCity] = useState("");
-  const [interestType, setInterestType] = useState("user");
-  const [waitlistLoading, setWaitlistLoading] = useState(false);
-  const [waitlistSuccess, setWaitlistSuccess] = useState(false);
-  const [waitlistError, setWaitlistError] = useState("");
 
   // Hero journey steps - visual loop
   const journeySteps = [
@@ -90,52 +73,6 @@ export default function Landing() {
     }
     setChecking(false);
   }, [searchParams]);
-
-  // Waitlist form submission
-  const handleWaitlistSubmit = async (e) => {
-    e.preventDefault();
-    setWaitlistLoading(true);
-    setWaitlistError("");
-
-    try {
-      // Get UTM params from URL
-      const urlParams = new URLSearchParams(window.location.search);
-
-      const { error } = await supabase
-        .from('waitlist')
-        .insert({
-          email: waitlistEmail.toLowerCase().trim(),
-          name: waitlistName.trim() || null,
-          phone: waitlistPhone.trim() || null,
-          city: waitlistCity.trim() || null,
-          interest_type: interestType,
-          referral_source: referralCode || null,
-          utm_source: urlParams.get('utm_source'),
-          utm_medium: urlParams.get('utm_medium'),
-          utm_campaign: urlParams.get('utm_campaign'),
-        });
-
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          setWaitlistError("You're already on the waitlist! We'll notify you when we launch.");
-        } else {
-          throw error;
-        }
-      } else {
-        setWaitlistSuccess(true);
-      }
-    } catch (err) {
-      setWaitlistError("Something went wrong. Please try again.");
-      console.error(err);
-    } finally {
-      setWaitlistLoading(false);
-    }
-  };
-
-  // Scroll to waitlist form
-  const scrollToWaitlist = () => {
-    document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   if (checking) {
     return (
@@ -270,15 +207,6 @@ export default function Landing() {
               <Flame className="w-4 h-4" />
               Launching Soon
             </span>
-            <Button
-              onClick={scrollToWaitlist}
-              className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold px-3 sm:px-5 text-sm sm:text-base rounded-xl shadow-md shadow-[#0066FF]/20 transition-all duration-200 hover:-translate-y-0.5"
-              data-testid="join-waitlist-nav"
-            >
-              <span className="hidden sm:inline">Become a Founder</span>
-              <span className="sm:hidden">Join</span>
-              <ArrowRight className="w-4 h-4 ml-1 sm:ml-1.5" />
-            </Button>
           </div>
         </div>
       </nav>
@@ -331,15 +259,8 @@ export default function Landing() {
             <p className="text-lg sm:text-xl text-[#555555] max-w-2xl mx-auto mb-8">
               Turn every workout into rewards. Compete with friends. Get free supplements.
             </p>
-            <Button
-              onClick={scrollToWaitlist}
-              size="lg"
-              className="bg-[#0066FF] hover:bg-[#0052CC] text-white text-lg px-10 py-6 rounded-xl font-semibold shadow-lg shadow-[#0066FF]/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#0066FF]/30"
-              data-testid="join-waitlist-hero"
-            >
-              Join the Waitlist
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            {/* Mystery Reward Box - Hero Placement */}
+            <MysteryBox inline={true} />
           </div>
 
           {/* Visual Loop - The Hook */}
@@ -388,8 +309,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Mystery Reward Box Section */}
-      <MysteryBox />
 
       {/* Features Section */}
       <section className="py-20 px-6 bg-[#F8F9FA]">
@@ -500,172 +419,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Waitlist Section */}
-      <section id="waitlist-form" className="py-20 px-6 bg-[#F8F9FA]">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-[#FF6B00]/10 rounded-full px-4 py-2 mb-4">
-              <Flame className="w-4 h-4 text-[#FF6B00]" />
-              <span className="text-[#FF6B00] font-semibold text-sm">Limited Founding Member Spots</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] mb-4">
-              We're Almost Ready
-            </h2>
-            <p className="text-lg text-[#555555]">
-              The response has been incredible. We're working hard to launch and can't wait to have you.
-              Join as a <strong>Founding Member</strong> and be first in line.
-            </p>
-          </div>
-
-          {waitlistSuccess ? (
-            <div className="bg-white rounded-2xl p-8 border border-[#E5E7EB] text-center">
-              <div className="w-16 h-16 bg-[#00C853]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-[#00C853]" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#111111] mb-2">You're a Founding Member!</h3>
-              <p className="text-[#555555] mb-6">
-                We'll notify you the moment we launch. As a Founding Member, you'll get exclusive early access and special perks.
-              </p>
-              <div className="flex items-center justify-center gap-2 text-[#0066FF]">
-                <Award className="w-5 h-5" />
-                <span className="font-semibold">Founding Member Status Secured</span>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-8 border border-[#E5E7EB]">
-              <form onSubmit={handleWaitlistSubmit} className="space-y-5">
-                <div>
-                  <label className="text-sm font-medium text-[#555555] mb-1.5 block">Email Address *</label>
-                  <Input
-                    type="email"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
-                  />
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-[#555555] mb-1.5 block">Your Name</label>
-                    <Input
-                      type="text"
-                      value={waitlistName}
-                      onChange={(e) => setWaitlistName(e.target.value)}
-                      placeholder="John Doe"
-                      className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-[#555555] mb-1.5 block">Phone Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
-                      <Input
-                        type="tel"
-                        value={waitlistPhone}
-                        onChange={(e) => setWaitlistPhone(e.target.value)}
-                        placeholder="+91 98765 43210"
-                        className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl pl-10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-[#555555] mb-1.5 block">City</label>
-                  <Input
-                    type="text"
-                    value={waitlistCity}
-                    onChange={(e) => setWaitlistCity(e.target.value)}
-                    placeholder="Mumbai, Delhi, Bangalore, etc."
-                    className="h-12 bg-[#F8F9FA] border-[#E5E7EB] rounded-xl"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-[#555555] mb-2 block">I am a...</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: 'user', label: 'Fitness Enthusiast' },
-                      { value: 'gym_owner', label: 'Gym Owner' },
-                      { value: 'partner', label: 'Brand Partner' }
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setInterestType(option.value)}
-                        className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                          interestType === option.value
-                            ? 'bg-[#0066FF] text-white'
-                            : 'bg-[#F8F9FA] text-[#555555] hover:bg-[#E5E7EB]'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {waitlistError && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                    <p className="text-amber-700 text-sm text-center">{waitlistError}</p>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={waitlistLoading || !waitlistEmail}
-                  className="w-full h-14 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl font-semibold text-lg"
-                >
-                  {waitlistLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Award className="w-5 h-5 mr-2" />
-                      Become a Founding Member
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-center text-xs text-[#888888]">
-                  We'll only email you when we launch. No spam, ever.
-                </p>
-              </form>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[#0066FF] via-[#0052CC] to-[#003D99] relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-3xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 mb-6">
-            <Flame className="w-4 h-4 text-white" />
-            <span className="text-white font-medium text-sm">Launching very soon — Don't miss out</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Founding Members Get In First
-          </h2>
-          <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-xl mx-auto">
-            We've been overwhelmed by the response. Secure your spot as a Founding Member and be first to experience GymGraph.
-          </p>
-          <Button
-            onClick={scrollToWaitlist}
-            size="lg"
-            className="bg-white text-[#0066FF] hover:bg-[#F8F9FA] text-lg px-10 py-6 rounded-xl font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5"
-            data-testid="cta-button"
-          >
-            Claim Your Spot
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-          <p className="text-white/60 text-sm mt-6">Limited Founding Member spots available.</p>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="py-12 px-6 bg-[#111111]">

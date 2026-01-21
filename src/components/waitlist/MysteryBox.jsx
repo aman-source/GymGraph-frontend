@@ -14,7 +14,7 @@ const STATES = {
   ALREADY_UNLOCKED: "already_unlocked"
 };
 
-export default function MysteryBox() {
+export default function MysteryBox({ inline = false }) {
   const [searchParams] = useSearchParams();
   const [currentState, setCurrentState] = useState(STATES.LOCKED);
   const [userData, setUserData] = useState(null);
@@ -78,6 +78,7 @@ export default function MysteryBox() {
         onClick={handleChestClick}
         isUnlocked={currentState === STATES.ALREADY_UNLOCKED}
         userData={userData}
+        inline={inline}
       />
 
       {/* Signup modal */}

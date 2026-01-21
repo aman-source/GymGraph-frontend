@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -15,7 +11,9 @@ import {
   Crown,
   Share2,
   Sparkles,
-  Star
+  Star,
+  Users,
+  X
 } from "lucide-react";
 
 // Reward configurations
@@ -25,36 +23,21 @@ const REWARDS = {
     subtitle: "You're among the first 100!",
     icon: Crown,
     color: "#FFD700",
-    benefits: [
-      "Lifetime Founding Member badge",
-      "Early access to all features",
-      "Direct line to founders",
-      "Priority support forever"
-    ]
+    gradient: "from-[#FFD700] to-[#FFA500]"
   },
   early_bird: {
     title: "Early Bird",
     subtitle: "Welcome to the inner circle!",
     icon: Award,
     color: "#FF9500",
-    benefits: [
-      "Early Bird badge",
-      "Priority feature access",
-      "Exclusive community access",
-      "Beta testing invites"
-    ]
+    gradient: "from-[#FF9500] to-[#FF6B00]"
   },
   supporter: {
     title: "Supporter",
     subtitle: "Thanks for joining early!",
     icon: Gift,
     color: "#0066FF",
-    benefits: [
-      "Supporter badge",
-      "Early access queue priority",
-      "Special launch perks",
-      "Community membership"
-    ]
+    gradient: "from-[#0066FF] to-[#0052CC]"
   }
 };
 
@@ -74,13 +57,13 @@ export default function RewardReveal({ open, onClose, userData }) {
   const RewardIcon = reward.icon;
 
   const referralLink = `${window.location.origin}/?ref=${userData.referral_code}`;
-  const shareMessage = `I just unlocked my ${reward.title} reward on GymGraph! Join with my code ${userData.referral_code} and get exclusive perks too! ${referralLink}`;
+  const shareMessage = `🎁 I just unlocked ${userData.reward_coins} coins on GymGraph!\n\nJoin with my code: ${userData.referral_code}\nWe both get bonus coins! 💰\n\n${referralLink}`;
 
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(userData.referral_code);
+      await navigator.clipboard.writeText(referralLink);
       setCopied(true);
-      toast.success("Referral code copied!");
+      toast.success("Link copied!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy");
@@ -95,7 +78,7 @@ export default function RewardReveal({ open, onClose, userData }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join GymGraph',
+          title: 'Join GymGraph - Get Free Coins!',
           text: shareMessage,
           url: referralLink,
         });
@@ -109,200 +92,244 @@ export default function RewardReveal({ open, onClose, userData }) {
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-white border-0 rounded-3xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
-        {/* Animated header */}
+    <AnimatePresence>
+      {open && (
         <motion.div
-          className="relative p-8 text-center overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${reward.color}20, ${reward.color}40)` }}
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          {/* Background particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 rounded-full"
-                style={{
-                  background: reward.color,
-                  left: `${20 + i * 15}%`,
-                  top: `${10 + (i % 3) * 30}%`
-                }}
-                animate={{
-                  y: [-5, 5, -5],
-                  opacity: [0.3, 0.7, 0.3]
-                }}
-                transition={{
-                  duration: 2 + i * 0.3,
-                  repeat: Infinity,
-                  delay: i * 0.2
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Lucky winner badge */}
-          {userData.is_lucky && (
-            <motion.div
-              className="absolute top-4 right-4 px-3 py-1 bg-[#FFD700] rounded-full text-sm font-bold text-black flex items-center gap-1"
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", bounce: 0.5, delay: 0.3 }}
-            >
-              <Star className="w-4 h-4" />
-              JACKPOT!
-            </motion.div>
-          )}
-
-          {/* Icon */}
+          {/* Backdrop */}
           <motion.div
-            className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-            style={{ background: reward.color }}
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
-          >
-            <RewardIcon className="w-10 h-10 text-white" />
-          </motion.div>
-
-          <motion.h2
-            className="text-2xl font-bold text-[#111111] mb-1"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {reward.title}
-          </motion.h2>
-          <motion.p
-            className="text-[#555555]"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            {reward.subtitle}
-          </motion.p>
-
-          {/* Position badge */}
-          {!userData.already_exists && (
-            <motion.div
-              className="absolute top-4 left-4 px-3 py-1 bg-white/80 rounded-full text-sm font-semibold"
-              style={{ color: reward.color }}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              #{userData.position} in queue
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Coins display */}
-        <div className="px-6 py-4 bg-gradient-to-r from-[#FFD700]/10 to-[#FF9500]/10 border-y border-[#FFD700]/20">
-          <motion.div
-            className="flex items-center justify-center gap-3"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
-          >
-            <Coins className="w-8 h-8 text-[#FFD700]" />
-            <span className="text-3xl font-bold text-[#111111]">{userData.reward_coins}</span>
-            <span className="text-lg text-[#555555]">coins locked in!</span>
-          </motion.div>
-          <p className="text-center text-sm text-[#888888] mt-1">
-            + {userData.premium_days} days premium trial at launch
-          </p>
-        </div>
-
-        {/* Benefits list */}
-        <div className="px-6 py-4">
-          <h3 className="text-sm font-semibold text-[#888888] uppercase tracking-wide mb-3">
-            Your Perks
-          </h3>
-          <ul className="space-y-2">
-            {reward.benefits.map((benefit, i) => (
-              <motion.li
-                key={i}
-                className="flex items-center gap-3 text-[#333333]"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-              >
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: `${reward.color}20` }}
-                >
-                  <Check className="w-4 h-4" style={{ color: reward.color }} />
-                </div>
-                {benefit}
-              </motion.li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Referral section */}
-        <div className="px-6 py-4 bg-[#F8F9FA] border-t border-[#E5E7EB]">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-[#555555]">
-              Share & Earn More
-            </h3>
-            <span className="text-xs text-[#888888]">
-              +10-15 coins per friend
-            </span>
-          </div>
-
-          {/* Referral code display */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 px-4 py-3 bg-white rounded-xl border-2 border-dashed border-[#E5E7EB]">
-              <p className="text-lg font-bold font-mono tracking-widest text-center">
-                {userData.referral_code}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={copyCode}
-              className="h-12 w-12 rounded-xl border-[#E5E7EB] hover:border-[#0066FF]"
-            >
-              {copied ? (
-                <Check className="w-5 h-5 text-[#00C853]" />
-              ) : (
-                <Copy className="w-5 h-5 text-[#555555]" />
-              )}
-            </Button>
-          </div>
-
-          {/* Share buttons */}
-          <div className="flex gap-2">
-            <Button
-              onClick={shareViaWhatsApp}
-              className="flex-1 h-12 bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-xl"
-            >
-              <WhatsAppIcon className="w-5 h-5 mr-2" />
-              WhatsApp
-            </Button>
-            <Button
-              onClick={shareNative}
-              className="flex-1 h-12 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl"
-            >
-              <Share2 className="w-5 h-5 mr-2" />
-              Share
-            </Button>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#E5E7EB]">
-          <Button
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            variant="ghost"
-            className="w-full h-12 text-[#555555] hover:text-[#111111] hover:bg-[#F8F9FA] rounded-xl"
+          />
+
+          {/* Modal */}
+          <motion.div
+            className="relative w-full sm:max-w-[420px] bg-white rounded-t-[28px] sm:rounded-[28px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
           >
-            Done
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 text-[#555555] hover:bg-black/20 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Hero Header with Reward */}
+            <div className="relative px-6 pt-8 pb-6 text-center overflow-hidden">
+              {/* Background gradient */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: `radial-gradient(circle at 50% 0%, ${reward.color} 0%, transparent 70%)`
+                }}
+              />
+
+              {/* Confetti particles */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full"
+                    style={{
+                      background: i % 3 === 0 ? "#FFD700" : i % 3 === 1 ? "#0066FF" : "#FF9500",
+                      left: `${10 + (i * 7)}%`,
+                      top: "-10%"
+                    }}
+                    animate={{
+                      y: ["0vh", "100vh"],
+                      x: [0, (i % 2 === 0 ? 1 : -1) * 30],
+                      rotate: [0, 360],
+                      opacity: [1, 0]
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      delay: i * 0.15,
+                      ease: "linear"
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Lucky winner badge */}
+              {userData.is_lucky && (
+                <motion.div
+                  className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-full text-sm font-bold text-black flex items-center gap-1 shadow-lg"
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", bounce: 0.5, delay: 0.3 }}
+                >
+                  <Star className="w-4 h-4" />
+                  JACKPOT!
+                </motion.div>
+              )}
+
+              {/* Badge icon */}
+              <motion.div
+                className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${reward.gradient} flex items-center justify-center shadow-lg`}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", bounce: 0.5 }}
+              >
+                <RewardIcon className="w-10 h-10 text-white" />
+              </motion.div>
+
+              <motion.h2
+                className="text-2xl font-bold text-[#111111] mb-1"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {reward.title}
+              </motion.h2>
+              <motion.p
+                className="text-[#666666]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                {reward.subtitle}
+              </motion.p>
+
+              {/* Position badge */}
+              {userData.position && (
+                <motion.div
+                  className="mt-3 inline-flex items-center gap-1 px-3 py-1 bg-[#F8F9FA] rounded-full text-sm font-medium text-[#555555]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  #{userData.position} in line
+                </motion.div>
+              )}
+            </div>
+
+            {/* Coins earned - big highlight */}
+            <motion.div
+              className="mx-6 p-5 bg-gradient-to-br from-[#FFD700]/15 via-[#FF9500]/10 to-[#FFD700]/15 rounded-2xl border border-[#FFD700]/30"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+            >
+              <div className="flex items-center justify-center gap-3">
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                >
+                  <Coins className="w-10 h-10 text-[#CC8800]" />
+                </motion.div>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-[#111111]">{userData.reward_coins}</p>
+                  <p className="text-sm text-[#666666]">coins locked in</p>
+                </div>
+              </div>
+              <p className="text-center text-xs text-[#888888] mt-2">
+                + {userData.premium_days} days premium at launch
+              </p>
+            </motion.div>
+
+            {/* Share section - THE MAIN CTA */}
+            <div className="px-6 py-6">
+              <motion.div
+                className="p-4 bg-gradient-to-br from-[#0066FF]/5 to-[#0066FF]/10 rounded-2xl border-2 border-dashed border-[#0066FF]/30"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                {/* Earn more header */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-[#0066FF]/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-[#0066FF]" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#111111]">Want more coins?</p>
+                    <p className="text-xs text-[#666666]">Earn +15 coins for each friend who joins</p>
+                  </div>
+                </div>
+
+                {/* Referral code display */}
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0066FF] to-[#0052CC] rounded-xl opacity-10" />
+                  <div className="relative flex items-center bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
+                    <div className="flex-1 px-4 py-3">
+                      <p className="text-xs text-[#888888] mb-0.5">Your invite link</p>
+                      <p className="font-mono text-sm font-semibold text-[#0066FF] truncate">
+                        {referralLink}
+                      </p>
+                    </div>
+                    <button
+                      onClick={copyCode}
+                      className="h-full px-4 bg-[#F8F9FA] border-l border-[#E5E7EB] hover:bg-[#E5E7EB] transition-colors"
+                    >
+                      {copied ? (
+                        <Check className="w-5 h-5 text-[#00C853]" />
+                      ) : (
+                        <Copy className="w-5 h-5 text-[#555555]" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Share buttons - prominent */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={shareViaWhatsApp}
+                    className="h-12 bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-xl font-semibold shadow-md active:scale-[0.98] transition-all"
+                  >
+                    <WhatsAppIcon className="w-5 h-5 mr-2" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    onClick={shareNative}
+                    className="h-12 bg-gradient-to-r from-[#0066FF] to-[#0052CC] hover:from-[#0052CC] hover:to-[#003D99] text-white rounded-xl font-semibold shadow-md active:scale-[0.98] transition-all"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Share
+                  </Button>
+                </div>
+
+                {/* Incentive reminder */}
+                <motion.div
+                  className="mt-4 flex items-center justify-center gap-2 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                  <span className="text-[#666666]">Your friends get</span>
+                  <span className="font-bold text-[#0066FF]">+20 bonus coins</span>
+                  <span className="text-[#666666]">too!</span>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Done button */}
+            <div className="px-6 pb-6">
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                className="w-full h-12 text-[#555555] hover:text-[#111111] hover:bg-[#F8F9FA] rounded-xl font-medium"
+              >
+                Done
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
