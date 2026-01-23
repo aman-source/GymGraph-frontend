@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Chest3D from "./Chest3D";
 import OrbitingRewards from "./OrbitingRewards";
 
-export default function LockedChest({ onClick, isUnlocked, userData, inline = false }) {
+export default function LockedChest({ onClick, isUnlocked, userData, inline = false, showOrbitingRewards = false }) {
   if (inline) {
     return (
       <motion.div
@@ -17,8 +17,8 @@ export default function LockedChest({ onClick, isUnlocked, userData, inline = fa
           <>
             {/* Orbiting rewards + Chest container */}
             <div className="relative w-[340px] sm:w-[400px] h-[340px] sm:h-[400px] flex items-center justify-center">
-              {/* Orbiting reward items */}
-              <OrbitingRewards isActive={true} />
+              {/* Orbiting reward items - only show on landing screen */}
+              {showOrbitingRewards && <OrbitingRewards isActive={true} />}
 
               {/* Clickable chest area with shake animation */}
               <motion.div
@@ -166,8 +166,8 @@ export default function LockedChest({ onClick, isUnlocked, userData, inline = fa
 
         {/* Orbiting rewards + Chest container for full section */}
         <div className="relative inline-flex items-center justify-center w-[420px] sm:w-[500px] h-[400px] sm:h-[460px]">
-          {/* Orbiting reward items - only show when locked */}
-          {!isUnlocked && <OrbitingRewards isActive={true} />}
+          {/* Orbiting reward items - only show on landing screen */}
+          {showOrbitingRewards && <OrbitingRewards isActive={true} />}
 
           <motion.div
             className={`relative ${!isUnlocked ? 'cursor-pointer' : ''} z-10`}

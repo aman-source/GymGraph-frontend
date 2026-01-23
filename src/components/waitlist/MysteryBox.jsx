@@ -79,6 +79,7 @@ export default function MysteryBox({ inline = false }) {
         isUnlocked={currentState === STATES.ALREADY_UNLOCKED}
         userData={userData}
         inline={inline}
+        showOrbitingRewards={currentState === STATES.LOCKED}
       />
 
       {/* Signup modal */}
