@@ -112,11 +112,13 @@ export default function OrbitingRewards({ isActive = true, className = "" }) {
         return (
           <motion.div
             key={reward.id}
-            className="absolute"
+            className="absolute bg-transparent"
             style={{
               left: "50%",
               top: "50%",
               zIndex: zIndex,
+              background: 'transparent',
+              backfaceVisibility: 'hidden',
             }}
             animate={{
               x: x,
@@ -144,9 +146,10 @@ export default function OrbitingRewards({ isActive = true, className = "" }) {
             <img
               src={reward.image}
               alt={reward.label}
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain -translate-x-1/2 -translate-y-1/2"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain -translate-x-1/2 -translate-y-1/2 bg-transparent"
               style={{
                 filter: `drop-shadow(0 8px 24px rgba(0, 0, 0, ${opacity * 0.4}))`,
+                background: 'none',
               }}
             />
 
