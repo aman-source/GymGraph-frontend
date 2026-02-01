@@ -332,7 +332,7 @@ export default function SuperAdminDashboard() {
   const [newCity, setNewCity] = useState("");
 
   // React Query hooks
-  const { user, isLoading: userLoading } = useCurrentUser();
+  const { user, isLoading: userLoading, isAuthenticated } = useCurrentUser();
   const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics();
   const {
     data: usersData,
@@ -452,7 +452,7 @@ export default function SuperAdminDashboard() {
   }, [userLoading, user, navigate]);
 
   // Show loading while checking auth
-  if (userLoading) {
+  if (userLoading || isAuthenticated === null) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -469,8 +469,25 @@ export default function SuperAdminDashboard() {
   }
 
   // Show login if not authenticated
-  if (!user) {
+  if (isAuthenticated === false) {
     return <AdminLogin title="Super Admin" subtitle="Sign in to access the Super Admin dashboard" />;
+  }
+
+  // Still loading user profile
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 text-[#8B5CF6] animate-spin" />
+            <span className="text-[#555555] font-medium">Loading profile...</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Don't render if wrong role (useEffect will redirect)

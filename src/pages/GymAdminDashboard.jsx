@@ -71,7 +71,7 @@ import {
 
 export default function GymAdminDashboard() {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Search and filter states
@@ -117,8 +117,8 @@ export default function GymAdminDashboard() {
     }
   }, [dashboardData?.gym]);
 
-  // Check authorization
-  if (authLoading) {
+  // Check authorization - show loading while checking
+  if (authLoading || isAuthenticated === null) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -135,8 +135,25 @@ export default function GymAdminDashboard() {
   }
 
   // Show login if not authenticated
-  if (!user) {
+  if (isAuthenticated === false) {
     return <AdminLogin title="Gym Admin" subtitle="Sign in to access the Gym Admin dashboard" />;
+  }
+
+  // Still loading user profile
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-[#00C853] rounded-2xl flex items-center justify-center animate-pulse">
+            <Building2 className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 text-[#00C853] animate-spin" />
+            <span className="text-[#555555]">Loading profile...</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check role permissions
