@@ -238,7 +238,63 @@ const GymRow = ({ gym, owner, onVerify, onSetOwner, onDelete }) => (
 
 const ITEMS_PER_PAGE = 10;
 
+// Auth wrapper component - checks auth before rendering dashboard
 export default function SuperAdminDashboard() {
+  const navigate = useNavigate();
+  const { user, isLoading: userLoading, isAuthenticated } = useCurrentUser();
+
+  // Show loading while checking auth
+  if (userLoading || isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 text-[#8B5CF6] animate-spin" />
+            <span className="text-[#555555] font-medium">Checking authorization...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (isAuthenticated === false) {
+    return <AdminLogin title="Super Admin" subtitle="Sign in to access the Super Admin dashboard" />;
+  }
+
+  // Still loading user profile
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 text-[#8B5CF6] animate-spin" />
+            <span className="text-[#555555] font-medium">Loading profile...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check role
+  if (user.role !== 'super_admin') {
+    toast.error('Access denied. Super admin only.');
+    navigate('/');
+    return null;
+  }
+
+  // User is authenticated and has correct role - render dashboard content
+  return <SuperAdminDashboardContent user={user} />;
+}
+
+// Dashboard content component - only rendered when authenticated
+function SuperAdminDashboardContent({ user }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -331,8 +387,7 @@ export default function SuperAdminDashboard() {
   const [configForm, setConfigForm] = useState(null);
   const [newCity, setNewCity] = useState("");
 
-  // React Query hooks
-  const { user, isLoading: userLoading, isAuthenticated } = useCurrentUser();
+  // React Query hooks - user is passed as prop from auth wrapper
   const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics();
   const {
     data: usersData,
@@ -441,59 +496,7 @@ export default function SuperAdminDashboard() {
     setGymsPage(1);
   }, [gymSearch]);
 
-  const isLoading = userLoading || analyticsLoading;
-
-  // Check if user is super_admin - redirect unauthorized users
-  useEffect(() => {
-    if (!userLoading && user && user.role !== 'super_admin') {
-      toast.error('Access denied. Super admin only.');
-      navigate('/');
-    }
-  }, [userLoading, user, navigate]);
-
-  // Show loading while checking auth
-  if (userLoading || isAuthenticated === null) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-5 h-5 text-[#8B5CF6] animate-spin" />
-            <span className="text-[#555555] font-medium">Checking authorization...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login if not authenticated
-  if (isAuthenticated === false) {
-    return <AdminLogin title="Super Admin" subtitle="Sign in to access the Super Admin dashboard" />;
-  }
-
-  // Still loading user profile
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-5 h-5 text-[#8B5CF6] animate-spin" />
-            <span className="text-[#555555] font-medium">Loading profile...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if wrong role (useEffect will redirect)
-  if (user.role !== 'super_admin') {
-    return null;
-  }
+  const isLoading = analyticsLoading;
 
   // Handlers
   const handleBanUser = () => {

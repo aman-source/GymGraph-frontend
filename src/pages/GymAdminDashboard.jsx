@@ -69,55 +69,12 @@ import {
   Trash2
 } from "lucide-react";
 
+// Auth wrapper component - checks auth before rendering dashboard
 export default function GymAdminDashboard() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Search and filter states
-  const [memberSearch, setMemberSearch] = useState("");
-  const [selectedMemberId, setSelectedMemberId] = useState(null);
-
-  // Modal states
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [showChallengeModal, setShowChallengeModal] = useState(false);
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-
-  // Form states
-  const [gymSettings, setGymSettings] = useState({ name: "", address: "", description: "" });
-  const [challengeForm, setChallengeForm] = useState({
-    name: "", description: "", entry_fee: 100, goal_count: 12, duration: "month"
-  });
-  const [announcementForm, setAnnouncementForm] = useState({
-    title: "", message: "", type: "general"
-  });
-
-  // Data hooks
-  const { data: dashboardData, isLoading: dashboardLoading } = useGymAdminDashboard();
-  const { data: membersData, isLoading: membersLoading } = useGymAdminMembers({ search: memberSearch });
-  const { data: memberHistory, isLoading: historyLoading } = useGymAdminMemberHistory(selectedMemberId);
-  const { data: challenges, isLoading: challengesLoading } = useGymAdminChallenges();
-  const { data: announcements, isLoading: announcementsLoading } = useGymAdminAnnouncements();
-
-  // Mutation hooks
-  const createChallenge = useCreateGymChallenge();
-  const sendAnnouncement = useSendGymAnnouncement();
-  const deleteAnnouncement = useDeleteGymAnnouncement();
-  const updateSettings = useUpdateGymSettings();
-
-  // Initialize gym settings from dashboard data
-  useMemo(() => {
-    if (dashboardData?.gym && !gymSettings.name) {
-      setGymSettings({
-        name: dashboardData.gym.name || "",
-        address: dashboardData.gym.address || "",
-        description: dashboardData.gym.description || ""
-      });
-    }
-  }, [dashboardData?.gym]);
-
-  // Check authorization - show loading while checking
+  // Show loading while checking auth
   if (authLoading || isAuthenticated === null) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
@@ -169,6 +126,58 @@ export default function GymAdminDashboard() {
     navigate("/");
     return null;
   }
+
+  // User is authenticated and has correct role - render dashboard content
+  return <GymAdminDashboardContent user={user} />;
+}
+
+// Dashboard content component - only rendered when authenticated
+function GymAdminDashboardContent({ user }) {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Search and filter states
+  const [memberSearch, setMemberSearch] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
+
+  // Modal states
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+
+  // Form states
+  const [gymSettings, setGymSettings] = useState({ name: "", address: "", description: "" });
+  const [challengeForm, setChallengeForm] = useState({
+    name: "", description: "", entry_fee: 100, goal_count: 12, duration: "month"
+  });
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: "", message: "", type: "general"
+  });
+
+  // Data hooks - only called when authenticated
+  const { data: dashboardData, isLoading: dashboardLoading } = useGymAdminDashboard();
+  const { data: membersData, isLoading: membersLoading } = useGymAdminMembers({ search: memberSearch });
+  const { data: memberHistory, isLoading: historyLoading } = useGymAdminMemberHistory(selectedMemberId);
+  const { data: challenges, isLoading: challengesLoading } = useGymAdminChallenges();
+  const { data: announcements, isLoading: announcementsLoading } = useGymAdminAnnouncements();
+
+  // Mutation hooks
+  const createChallenge = useCreateGymChallenge();
+  const sendAnnouncement = useSendGymAnnouncement();
+  const deleteAnnouncement = useDeleteGymAnnouncement();
+  const updateSettings = useUpdateGymSettings();
+
+  // Initialize gym settings from dashboard data
+  useMemo(() => {
+    if (dashboardData?.gym && !gymSettings.name) {
+      setGymSettings({
+        name: dashboardData.gym.name || "",
+        address: dashboardData.gym.address || "",
+        description: dashboardData.gym.description || ""
+      });
+    }
+  }, [dashboardData?.gym]);
 
   const handleLogout = async () => {
     await auth.signOut();
