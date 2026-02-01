@@ -44,6 +44,7 @@ import {
 } from "@/hooks";
 import { auth } from "@/lib/supabase";
 import { toast } from "sonner";
+import { AdminLogin } from "@/components/admin/AdminLogin";
 import {
   Users,
   Building2,
@@ -133,20 +134,22 @@ export default function GymAdminDashboard() {
     );
   }
 
+  // Show login if not authenticated
   if (!user) {
+    return <AdminLogin title="Gym Admin" subtitle="Sign in to access the Gym Admin dashboard" />;
+  }
+
+  // Check role permissions
+  if (user.role !== 'gym_admin' && user.role !== 'super_admin') {
+    toast.error("You don't have permission to access this page");
     navigate("/");
     return null;
   }
 
-  if (user.role !== 'gym_admin' && user.role !== 'super_admin') {
-    toast.error("You don't have permission to access this page");
-    navigate("/dashboard");
-    return null;
-  }
-
+  // Check gym assignment for gym_admin role
   if (user.role === 'gym_admin' && !user.managed_gym_id) {
     toast.error("No gym assigned to your account");
-    navigate("/dashboard");
+    navigate("/");
     return null;
   }
 

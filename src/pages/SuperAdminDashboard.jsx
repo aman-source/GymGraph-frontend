@@ -54,6 +54,7 @@ import {
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { AdminLogin } from "@/components/admin/AdminLogin";
 import {
   Users,
   Building2,
@@ -467,8 +468,13 @@ export default function SuperAdminDashboard() {
     );
   }
 
-  // Don't render if not authorized
-  if (!user || user.role !== 'super_admin') {
+  // Show login if not authenticated
+  if (!user) {
+    return <AdminLogin title="Super Admin" subtitle="Sign in to access the Super Admin dashboard" />;
+  }
+
+  // Don't render if wrong role (useEffect will redirect)
+  if (user.role !== 'super_admin') {
     return null;
   }
 
