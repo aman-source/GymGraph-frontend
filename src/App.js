@@ -352,6 +352,11 @@ const ProtectedRoute = ({ children }) => {
   return <ComingSoon />;
 };
 
+// Admin Route Component - Bypasses waitlist, admin pages handle their own auth
+const AdminRoute = ({ children }) => {
+  return children;
+};
+
 // Scroll to top on route change
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -382,16 +387,16 @@ function AppRouter() {
       <Route path="/privacy" element={<Privacy />} />
       {/* Auth callback route */}
       <Route path="/auth/callback" element={<AuthCallback />} />
-      {/* Admin Routes */}
+      {/* Admin Routes - Bypass waitlist, pages handle their own auth */}
       <Route path="/super-admin" element={
-        <ProtectedRoute>
+        <AdminRoute>
           <SuperAdminDashboard />
-        </ProtectedRoute>
+        </AdminRoute>
       } />
       <Route path="/gym-admin-dashboard" element={
-        <ProtectedRoute>
+        <AdminRoute>
           <GymAdminDashboard />
-        </ProtectedRoute>
+        </AdminRoute>
       } />
       <Route path="/onboarding" element={
         <ProtectedRoute>
