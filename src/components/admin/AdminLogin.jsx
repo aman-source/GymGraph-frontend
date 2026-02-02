@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth } from "@/lib/supabase";
-import { Loader2, Shield, LogIn } from "lucide-react";
+import { Loader2, Shield, LogIn, UserPlus } from "lucide-react";
 
 // GymGraph Mountain Logo Component
 const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
@@ -14,34 +14,81 @@ const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
 );
 
 export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to access the admin dashboard" }) {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess("");
 
-    try {
-      const { data, error: authError } = await auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (authError) {
-        setError(authError.message);
+    // Validation for sign up
+    if (isSignUp) {
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters");
+        setLoading(false);
         return;
       }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
+      }
+    }
 
-      // Auth state change will trigger re-render via useAuth
-      // The dashboard component will handle role verification
+    try {
+      if (isSignUp) {
+        // Sign up
+        const { data, error: authError } = await auth.signUp({
+          email: email.trim(),
+          password,
+        });
+
+        if (authError) {
+          setError(authError.message);
+          return;
+        }
+
+        // Check if email confirmation is required
+        if (data?.user && !data?.session) {
+          setSuccess("Account created! Please check your email to confirm, then sign in.");
+          setIsSignUp(false);
+          setPassword("");
+          setConfirmPassword("");
+        }
+        // If session exists, user is logged in automatically
+      } else {
+        // Sign in
+        const { data, error: authError } = await auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (authError) {
+          setError(authError.message);
+          return;
+        }
+        // Auth state change will trigger re-render via useAuth
+      }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp);
+    setError("");
+    setSuccess("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   return (
@@ -56,14 +103,16 @@ export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to acces
           <p className="text-[#555555] mt-2">{subtitle}</p>
         </div>
 
-        {/* Login Card */}
+        {/* Login/Signup Card */}
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-8 shadow-sm">
           <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#E5E7EB]">
             <Shield className="w-5 h-5 text-[#0066FF]" />
-            <span className="font-medium text-[#111111]">Secure Admin Access</span>
+            <span className="font-medium text-[#111111]">
+              {isSignUp ? "Create Admin Account" : "Secure Admin Access"}
+            </span>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[#333333]">Email</Label>
               <Input
@@ -82,17 +131,39 @@ export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to acces
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={isSignUp ? "Create a password (min 6 chars)" : "Enter your password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={isSignUp ? 6 : undefined}
                 className="h-12 border-[#E5E7EB] focus:border-[#0066FF] focus:ring-[#0066FF]/20"
               />
             </div>
 
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-[#333333]">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="h-12 border-[#E5E7EB] focus:border-[#0066FF] focus:ring-[#0066FF]/20"
+                />
+              </div>
+            )}
+
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
+                {success}
               </div>
             )}
 
@@ -104,16 +175,39 @@ export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to acces
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Signing in...
+                  {isSignUp ? "Creating account..." : "Signing in..."}
                 </>
               ) : (
                 <>
-                  <LogIn className="w-5 h-5 mr-2" />
-                  Sign In
+                  {isSignUp ? (
+                    <>
+                      <UserPlus className="w-5 h-5 mr-2" />
+                      Create Account
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Sign In
+                    </>
+                  )}
                 </>
               )}
             </Button>
           </form>
+
+          {/* Toggle between Sign In and Sign Up */}
+          <div className="mt-6 pt-4 border-t border-[#E5E7EB] text-center">
+            <p className="text-[#555555] text-sm">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="ml-2 text-[#0066FF] font-medium hover:underline"
+              >
+                {isSignUp ? "Sign In" : "Create Account"}
+              </button>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
