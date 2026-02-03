@@ -186,22 +186,29 @@ function Particles() {
 }
 
 function Scene({ interaction }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const groupRef = useRef();
 
+  // Responsive scale based on screen width
+  const scale = size.width < 640 ? 0.6 : size.width < 1024 ? 0.75 : 0.85;
+
   const podiums = [
-    { position: 0, height: 2.5, color: new THREE.Color(0x0066FF), rank: 1 },
-    { position: -2.5, height: 1.8, color: new THREE.Color(0x00D4AA), rank: 2 },
-    { position: 2.5, height: 1.3, color: new THREE.Color(0x4488FF), rank: 3 }
+    { position: 0, height: 2.4, color: new THREE.Color(0x0066FF), rank: 1 },
+    { position: -1.8, height: 1.7, color: new THREE.Color(0x00D4AA), rank: 2 },
+    { position: 1.8, height: 1.2, color: new THREE.Color(0x4488FF), rank: 3 }
   ];
 
   useFrame(() => {
-    camera.position.x = interaction.x * 3;
-    camera.position.y = 3.5 + interaction.y * 1.5;
-    camera.lookAt(0, 1, 0);
+    // Keep camera more stable, only subtle movement
+    camera.position.x = interaction.x * 0.8;
+    camera.position.y = 3 + interaction.y * 0.4;
+    camera.position.z = 10;
+    camera.lookAt(0, 0.8, 0);
 
     if (groupRef.current) {
-      groupRef.current.rotation.y += (interaction.x * 0.3 - groupRef.current.rotation.y) * 0.05;
+      groupRef.current.scale.setScalar(scale);
+      // Very subtle rotation for parallax effect
+      groupRef.current.rotation.y += (interaction.x * 0.1 - groupRef.current.rotation.y) * 0.03;
     }
   });
 
@@ -335,7 +342,7 @@ export default function Leaderboard3D({ className = "" }) {
   return (
     <div ref={containerRef} className={`absolute inset-0 ${className}`}>
       <Canvas
-        camera={{ position: [0, 3.5, 8], fov: 60 }}
+        camera={{ position: [0, 3, 10], fov: 45 }}
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent' }}
         onTouchMove={handleTouchMove}

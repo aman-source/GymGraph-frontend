@@ -12,11 +12,7 @@ const orbVertexShader = `
     vNormal = normalize(normalMatrix * normal);
     vPosition = position;
 
-    vec3 pos = position;
-    float pulse = sin(time * 2.0) * 0.1;
-    pos += normal * pulse;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
@@ -37,9 +33,7 @@ const orbFragmentShader = `
     float glow = fresnel * 1.5;
     color += vec3(glow * 0.0, glow * 0.4, glow * 1.0);
 
-    float pulse = sin(time * 2.0) * 0.3 + 0.7;
-
-    gl_FragColor = vec4(color * pulse, 0.9 + fresnel * 0.1);
+    gl_FragColor = vec4(color, 0.9 + fresnel * 0.1);
   }
 `;
 
@@ -52,8 +46,7 @@ const glowFragmentShader = `
     vec3 viewDirection = normalize(cameraPosition - vPosition);
     float fresnel = pow(1.0 - dot(viewDirection, vNormal), 2.0);
 
-    float pulse = sin(time * 2.0) * 0.5 + 0.5;
-    gl_FragColor = vec4(0.0, 0.4, 1.0, fresnel * 0.4 * pulse);
+    gl_FragColor = vec4(0.0, 0.4, 1.0, fresnel * 0.4);
   }
 `;
 
@@ -171,21 +164,29 @@ function Orb({ interaction }) {
 }
 
 function Scene({ interaction }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
+  const groupRef = useRef();
+
+  // Responsive scale based on screen width
+  const scale = size.width < 640 ? 0.65 : size.width < 1024 ? 0.8 : 1;
 
   useFrame(() => {
     camera.position.x = interaction.x * 0.5;
     camera.position.y = interaction.y * 0.3;
     camera.lookAt(0, 0, 0);
+
+    if (groupRef.current) {
+      groupRef.current.scale.setScalar(scale);
+    }
   });
 
   return (
-    <>
+    <group ref={groupRef}>
       <ambientLight intensity={0.3} />
       <pointLight position={[5, 5, 5]} intensity={0.5} color={0x0066FF} />
       <pointLight position={[-5, -5, 5]} intensity={0.3} color={0x00D4AA} />
       <Orb interaction={interaction} />
-    </>
+    </group>
   );
 }
 

@@ -6,18 +6,9 @@ import {
   Users,
   Heart,
   Zap,
-  MapPin,
   Trophy,
   Flame,
 } from "lucide-react";
-
-// GymGraph Mountain Logo Component
-const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
-  <svg viewBox="0 0 512 512" className={className} fill={color}>
-    <polygon points="80,400 220,160 320,400" />
-    <polygon points="200,400 340,100 460,400" />
-  </svg>
-);
 
 export default function About() {
   const values = [
@@ -25,14 +16,14 @@ export default function About() {
       icon: Target,
       title: "Accountability First",
       description:
-        "We believe real progress comes from showing up consistently. Our GPS verification ensures you can't lie to yourself.",
+        "We believe real progress comes from showing up consistently. When you can't lie to yourself, you finally start making progress.",
       color: "#0066FF",
     },
     {
       icon: Users,
       title: "Community Driven",
       description:
-        "Fitness is better together. Connect with like-minded people at your gym and push each other to be better.",
+        "Fitness is better when others are watching. Connect with people at your gym who push you to be better.",
       color: "#00C853",
     },
     {
@@ -75,9 +66,7 @@ export default function About() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E5E7EB]/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center shadow-md shadow-[#0066FF]/20">
-              <GymGraphLogo className="w-6 h-6" />
-            </div>
+            <img src="/logo.png" alt="GymGraph" className="w-10 h-10 rounded-xl" />
             <span className="text-xl font-bold text-[#111111]">GymGraph</span>
           </Link>
           <Link to="/">
@@ -125,9 +114,9 @@ export default function About() {
               people who know when you showed up and when you didn't.
             </p>
             <p>
-              That's why we built GymGraph. GPS-verified check-ins that you
-              can't fake, a community of people at your gym rooting for you, and
-              the satisfaction of building a streak you don't want to break.
+              That's why we built GymGraph. Check-ins you can't fake,
+              a community of people at your gym rooting for you, and
+              the satisfaction of building a streak you refuse to break.
             </p>
           </div>
         </div>
@@ -167,7 +156,7 @@ export default function About() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-16 px-6 bg-[#111111]">
+      <section className="py-16 px-6 bg-gradient-to-br from-[#0066FF] to-[#0052CC]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
             {team.map((item, index) => (
@@ -175,7 +164,7 @@ export default function About() {
                 <h3 className="text-xl font-semibold text-white mb-4">
                   {item.name}
                 </h3>
-                <p className="text-[#888888] leading-relaxed">
+                <p className="text-white/70 leading-relaxed">
                   {item.description}
                 </p>
               </div>
@@ -193,13 +182,13 @@ export default function About() {
           <div className="grid sm:grid-cols-3 gap-8">
             <div className="p-6">
               <div className="w-12 h-12 bg-[#0066FF]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-6 h-6 text-[#0066FF]" />
+                <Target className="w-6 h-6 text-[#0066FF]" />
               </div>
               <h3 className="font-semibold text-[#111111] mb-2">
-                GPS Verification
+                No More Lying
               </h3>
               <p className="text-sm text-[#555555]">
-                Real check-ins you can't fake. Know for sure you showed up.
+                You either showed up or you didn't. The app knows the truth.
               </p>
             </div>
             <div className="p-6">
@@ -207,10 +196,10 @@ export default function About() {
                 <Flame className="w-6 h-6 text-[#FF6B35]" />
               </div>
               <h3 className="font-semibold text-[#111111] mb-2">
-                Streak System
+                Fear of Breaking
               </h3>
               <p className="text-sm text-[#555555]">
-                Build momentum with weekly streaks that compound over time.
+                Your streak becomes your identity. You won't let it die.
               </p>
             </div>
             <div className="p-6">
@@ -218,10 +207,10 @@ export default function About() {
                 <Trophy className="w-6 h-6 text-[#8B5CF6]" />
               </div>
               <h3 className="font-semibold text-[#111111] mb-2">
-                Gym Leaderboards
+                Social Pressure
               </h3>
               <p className="text-sm text-[#555555]">
-                Compete with others at your gym. Healthy competition motivates.
+                When your gym knows your rank, skipping isn't an option.
               </p>
             </div>
           </div>
@@ -250,35 +239,33 @@ export default function About() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 bg-[#111111]">
+      <footer className="py-8 px-6 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-lg flex items-center justify-center">
-              <GymGraphLogo className="w-5 h-5" />
-            </div>
-            <span className="font-semibold text-white">GymGraph</span>
+            <img src="/logo.png" alt="GymGraph" className="w-8 h-8 rounded-lg" />
+            <span className="font-semibold text-[#111111]">GymGraph</span>
           </div>
           <div className="flex items-center gap-6">
             <Link
               to="/contact"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               Contact
             </Link>
             <Link
               to="/terms"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               Terms
             </Link>
             <Link
               to="/privacy"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               Privacy
             </Link>
           </div>
-          <p className="text-[#888888] text-sm">
+          <p className="text-gray-300 text-sm">
             © {new Date().getFullYear()} GymGraph
           </p>
         </div>

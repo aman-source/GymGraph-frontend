@@ -1,14 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, Eye, Lock, Trash2, Globe, Database, Bell } from "lucide-react";
-
-// GymGraph Mountain Logo Component
-const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
-  <svg viewBox="0 0 512 512" className={className} fill={color}>
-    <polygon points="80,400 220,160 320,400" />
-    <polygon points="200,400 340,100 460,400" />
-  </svg>
-);
+import { ArrowLeft, Shield, Eye, Lock, Trash2 } from "lucide-react";
 
 export default function Privacy() {
   const highlights = [
@@ -44,9 +36,7 @@ export default function Privacy() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E5E7EB]/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center shadow-md shadow-[#0066FF]/20">
-              <GymGraphLogo className="w-6 h-6" />
-            </div>
+            <img src="/logo.png" alt="GymGraph" className="w-10 h-10 rounded-xl" />
             <span className="text-xl font-bold text-[#111111]">GymGraph</span>
           </Link>
           <Link to="/">
@@ -380,35 +370,33 @@ export default function Privacy() {
       </div>
 
       {/* Footer */}
-      <footer className="py-8 px-6 bg-[#111111]">
+      <footer className="py-8 px-6 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-lg flex items-center justify-center">
-              <GymGraphLogo className="w-5 h-5" />
-            </div>
-            <span className="font-semibold text-white">GymGraph</span>
+            <img src="/logo.png" alt="GymGraph" className="w-8 h-8 rounded-lg" />
+            <span className="font-semibold text-[#111111]">GymGraph</span>
           </div>
           <div className="flex items-center gap-6">
             <Link
               to="/about"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               About
             </Link>
             <Link
               to="/contact"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               Contact
             </Link>
             <Link
               to="/terms"
-              className="text-[#888888] hover:text-white transition-colors text-sm"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
               Terms
             </Link>
           </div>
-          <p className="text-[#888888] text-sm">
+          <p className="text-gray-300 text-sm">
             © {new Date().getFullYear()} GymGraph
           </p>
         </div>
