@@ -9,7 +9,7 @@ const isTouchDevice = () => {
 };
 
 // Rank sprite component using canvas texture
-function RankSprite({ rank, position }) {
+function RankSprite({ rank, position, color }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
@@ -17,7 +17,9 @@ function RankSprite({ rank, position }) {
     const ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, 256, 256);
-    ctx.fillStyle = '#ffffff';
+    // Use rank-specific colors
+    const colors = { 1: '#FFD700', 2: '#A0A0A0', 3: '#CD7F32' };
+    ctx.fillStyle = colors[rank] || '#333333';
     ctx.font = 'bold 120px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -175,10 +177,10 @@ function Particles() {
         />
       </bufferGeometry>
       <pointsMaterial
-        color={0x00D4AA}
+        color={0xFFD700}
         size={0.05}
         transparent
-        opacity={0.6}
+        opacity={0.5}
         sizeAttenuation
       />
     </points>
@@ -193,9 +195,9 @@ function Scene({ interaction }) {
   const scale = size.width < 640 ? 0.6 : size.width < 1024 ? 0.75 : 0.85;
 
   const podiums = [
-    { position: 0, height: 2.4, color: new THREE.Color(0x0066FF), rank: 1 },
-    { position: -1.8, height: 1.7, color: new THREE.Color(0x00D4AA), rank: 2 },
-    { position: 1.8, height: 1.2, color: new THREE.Color(0x4488FF), rank: 3 }
+    { position: 0, height: 2.4, color: new THREE.Color(0xFFD700), rank: 1 },      // Gold
+    { position: -1.8, height: 1.7, color: new THREE.Color(0xC0C0C0), rank: 2 },   // Silver
+    { position: 1.8, height: 1.2, color: new THREE.Color(0xCD7F32), rank: 3 }     // Bronze
   ];
 
   useFrame(() => {
@@ -229,9 +231,9 @@ function Scene({ interaction }) {
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
           <planeGeometry args={[10, 10]} />
           <meshStandardMaterial
-            color={0x0066FF}
+            color={0x222222}
             transparent
-            opacity={0.1}
+            opacity={0.08}
             metalness={0.9}
             roughness={0.1}
           />

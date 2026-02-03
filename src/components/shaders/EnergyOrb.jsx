@@ -61,8 +61,8 @@ function Orb({ interaction }) {
     fragmentShader: orbFragmentShader,
     uniforms: {
       time: { value: 0 },
-      color1: { value: new THREE.Color(0x0066FF) },
-      color2: { value: new THREE.Color(0x00D4AA) }
+      color1: { value: new THREE.Color(0x4F46E5) },   // Indigo
+      color2: { value: new THREE.Color(0x06B6D4) }    // Cyan
     },
     transparent: true,
     side: THREE.DoubleSide
@@ -143,7 +143,7 @@ function Orb({ interaction }) {
           />
         </bufferGeometry>
         <pointsMaterial
-          color={0x0066FF}
+          color={0x4F46E5}
           size={0.06}
           transparent
           opacity={0.7}
@@ -153,11 +153,11 @@ function Orb({ interaction }) {
 
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.6, 1.7, 64]} />
-        <meshBasicMaterial color={0x00D4AA} transparent opacity={0.3} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={0x06B6D4} transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
       <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]}>
         <ringGeometry args={[1.8, 1.85, 64]} />
-        <meshBasicMaterial color={0x0066FF} transparent opacity={0.2} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={0x4F46E5} transparent opacity={0.2} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
@@ -183,8 +183,8 @@ function Scene({ interaction }) {
   return (
     <group ref={groupRef}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[5, 5, 5]} intensity={0.5} color={0x0066FF} />
-      <pointLight position={[-5, -5, 5]} intensity={0.3} color={0x00D4AA} />
+      <pointLight position={[5, 5, 5]} intensity={0.5} color={0x4F46E5} />
+      <pointLight position={[-5, -5, 5]} intensity={0.3} color={0x06B6D4} />
       <Orb interaction={interaction} />
     </group>
   );
