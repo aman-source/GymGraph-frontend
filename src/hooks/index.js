@@ -1,81 +1,5 @@
-// User hooks
-export { useCurrentUser, useUpdateUser, useUserProfile, useUserStats, useConnectionStatus, useDeleteUser } from './useUser';
-
-// Gym hooks
-export {
-  useGym,
-  useGyms,
-  useSearchGyms,
-  useNearbyGyms,
-  useGymLeaderboard,
-  useGymMembers,
-  useSmartSearchGyms,
-  useRecordGymSelection,
-  useSubmitGym,
-  usePreloadNearbyGyms,
-  useGymSuggestions,
-} from './useGym';
-
-// Connection hooks
-export {
-  useConnections,
-  usePendingConnections,
-  useDiscoverConnections,
-  useConnectionsData,
-  useAcceptConnection,
-  useDeclineConnection,
-  useRemoveConnection,
-  useSendConnectionRequest,
-} from './useConnections';
-
-// Check-in hooks
-export { useCheckinFeed, useMyCheckins, useCreateCheckin, useTodayCheckins, useActiveSession, useClaimReward } from './useCheckins';
-
-// Engagement hooks
-export {
-  useUserProgress,
-  useGymActivity,
-  useLeaderboardPosition,
-  useGymVsGym,
-  useNotifications,
-  useNotificationCount,
-  useCredits,
-  useMarkNotificationRead,
-  useMarkAllNotificationsRead,
-  useDeleteNotification,
-} from './useEngagement';
-
-// Leaderboard hooks
-export { useConnectionsLeaderboard, useCityLeaderboard } from './useLeaderboards';
-
-// Challenge hooks
-export {
-  useChallenges,
-  useMyChallenges,
-  useChallenge,
-  useChallengeLeaderboard,
-  useJoinChallenge,
-  useCreateChallenge,
-  useProcessChallenges,
-} from './useChallenges';
-
-// Coin system hooks
-export {
-  useCoinBalance,
-  useCoinSummary,
-  useCoinTransactions,
-  useStreak,
-  useReferral,
-  useEconomyInfo,
-  useStore,
-  useChallengePool,
-  useClaimSignupBonus,
-  useClaimProfileBonus,
-  useApplyReferral,
-  useFreezeStreak,
-  useRestoreStreak,
-  useJoinChallengeWithCoins,
-} from './useCoins';
+// Re-export useAuth as useCurrentUser for backwards compatibility
+export { useAuth as useCurrentUser } from '@/lib/auth';
 
 // Admin hooks
 export {
@@ -100,14 +24,11 @@ export {
   useCancelChallenge,
   useRefundChallenge,
   useUpdateConfig,
+  useAdminFeedback,
+  useAdminFeedbackStats,
+  useUpdateFeedback,
+  useDeleteFeedback,
 } from './useAdmin';
-
-// Gym Owner hooks
-export {
-  useGymOwnerDashboard,
-  useRegenerateQR,
-  useGymAuthorization,
-} from './useGymOwner';
 
 // Gym Admin hooks
 export {
@@ -121,22 +42,3 @@ export {
   useDeleteGymAnnouncement,
   useUpdateGymSettings,
 } from './useGymAdmin';
-
-// Badge hooks
-export {
-  useBadges,
-  useMyBadges,
-  useBadgeProgress,
-  useNextBadge,
-  useCheckBadges,
-} from './useBadges';
-
-// Feedback hooks
-export {
-  useSubmitFeedback,
-  useMyFeedback,
-  useAdminFeedback,
-  useAdminFeedbackStats,
-  useUpdateFeedback,
-  useDeleteFeedback,
-} from './useFeedback';

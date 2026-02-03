@@ -8,67 +8,58 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
-      manifest: false, // Use existing manifest.json in public folder
+      includeAssets: ['favicon.ico', 'logo.png', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'GymGraph - LinkedIn for Fitness',
+        short_name: 'GymGraph',
+        description: 'Stop making excuses. Track. Compete. Get Fit. Together.',
+        theme_color: '#0A0A0A',
+        background_color: '#0A0A0A',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/logo.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
-        // Exclude large reward images from precaching (they're 2+ MB each)
-        globIgnores: ['**/tshirt.png', '**/hoodie.png', '**/sipper.png', '**/sleeveless.png'],
-        // Don't precache index.html to ensure fresh auth state
-        navigateFallback: null,
-        // Runtime caching strategies
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
-            // Cache static assets
-            urlPattern: /^https:\/\/.*\.(png|jpg|jpeg|svg|gif|webp|ico)$/,
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'images-cache',
+              cacheName: 'google-fonts-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
-            },
-          },
-          {
-            // Cache fonts
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-            },
-          },
-          {
-            // Network-first for API calls (don't cache auth or user data)
-            urlPattern: /\/api\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5, // 5 minutes
-              },
-              networkTimeoutSeconds: 10,
-            },
-          },
-          {
-            // Never cache Supabase auth requests
-            urlPattern: /supabase\.co.*auth/,
-            handler: 'NetworkOnly',
-          },
-        ],
-        // Skip waiting to activate new service worker immediately
-        skipWaiting: true,
-        clientsClaim: true,
-      },
-      devOptions: {
-        enabled: false, // Disable in development
-      },
-    }),
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      }
+    })
   ],
   resolve: {
     alias: {

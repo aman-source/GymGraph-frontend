@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useAuth } from '@/App';
+import { useAuth } from '@/lib/auth';
 
 // Query keys for gym admin
 export const gymAdminQueryKeys = {

@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/App";
+import { useAuth } from "@/lib/auth";
 import {
   useGymAdminDashboard,
   useGymAdminMembers,

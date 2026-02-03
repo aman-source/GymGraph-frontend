@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useAuth } from '@/App';
+import { useAuth } from '@/lib/auth';
 
 // Query keys for admin - include pagination params
 export const adminQueryKeys = {
@@ -478,6 +478,90 @@ export function useUpdateConfig() {
     },
     onError: (error) => {
       toast.error(error.response?.data?.detail || 'Failed to save configuration');
+    },
+  });
+}
+
+/**
+ * Hook to get admin feedback list with pagination
+ */
+export function useAdminFeedback({ limit = 20, skip = 0, type = '', status = '' } = {}) {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
+
+  return useQuery({
+    queryKey: ['admin', 'feedback', { limit, skip, type, status }],
+    queryFn: async () => {
+      const params = { limit, skip };
+      if (type && type !== 'all') params.type = type;
+      if (status && status !== 'all') params.status = status;
+      const { data } = await api.get('/admin/feedback', { params });
+      return data;
+    },
+    staleTime: 60 * 1000,
+    enabled: isSuperAdmin,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Hook to get admin feedback statistics
+ */
+export function useAdminFeedbackStats() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
+
+  return useQuery({
+    queryKey: ['admin', 'feedback-stats'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/feedback/stats');
+      return data;
+    },
+    staleTime: 60 * 1000,
+    enabled: isSuperAdmin,
+  });
+}
+
+/**
+ * Hook to update feedback status
+ */
+export function useUpdateFeedback() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ feedbackId, status, adminNotes }) => {
+      const { data } = await api.patch(`/admin/feedback/${feedbackId}`, { status, admin_notes: adminNotes });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'feedback-stats'] });
+      toast.success('Feedback updated');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to update feedback');
+    },
+  });
+}
+
+/**
+ * Hook to delete feedback
+ */
+export function useDeleteFeedback() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (feedbackId) => {
+      const { data } = await api.delete(`/admin/feedback/${feedbackId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'feedback-stats'] });
+      toast.success('Feedback deleted');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to delete feedback');
     },
   });
 }

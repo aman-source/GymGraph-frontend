@@ -1,443 +1,171 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import {
-  Trophy,
-  Users,
-  MapPin,
-  Award,
-  X,
-  Star,
-  Flame,
-  Gift,
-  Repeat,
-  ChevronRight,
-} from "lucide-react";
-import { MysteryBox } from "@/components/waitlist";
-
-// GymGraph Mountain Logo Component
-const GymGraphLogo = ({ className = "w-6 h-6", color = "white" }) => (
-  <svg viewBox="0 0 512 512" className={className} fill={color}>
-    <polygon points="80,400 220,160 320,400" />
-    <polygon points="200,400 340,100 460,400" />
-  </svg>
-);
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { EnergyOrb, Leaderboard3D } from "@/components/shaders";
 
 export default function Landing() {
-  const [searchParams] = useSearchParams();
-  const [checking, setChecking] = useState(true);
-  const [referralCode, setReferralCode] = useState(null);
-
-  // Hero journey steps - visual loop
-  const journeySteps = [
-    {
-      text: "Check in",
-      subtext: "GPS verified. Earn coins."
-    },
-    {
-      text: "Build streaks",
-      subtext: "Stay consistent. Unlock badges."
-    },
-    {
-      text: "Compete",
-      subtext: "Leaderboards. Bragging rights."
-    },
-    {
-      text: "Connect",
-      subtext: "Find gym partners."
-    },
-  ];
-
-  // Testimonial carousel state
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
-  // Auto-slide effect for testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % 10); // 10 testimonials
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Capture referral code from URL and store in localStorage
-  useEffect(() => {
-    const refCode = searchParams.get('ref');
-    if (refCode && refCode.length >= 6) {
-      const cleanCode = refCode.toUpperCase().slice(0, 8);
-      setReferralCode(cleanCode);
-      localStorage.setItem('gymgraph_referral_code', cleanCode);
-    } else {
-      const storedCode = localStorage.getItem('gymgraph_referral_code');
-      if (storedCode) {
-        setReferralCode(storedCode);
-      }
-    }
-    setChecking(false);
-  }, [searchParams]);
-
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
-            <GymGraphLogo className="w-8 h-8" />
-          </div>
-          <div className="w-6 h-6 border-2 border-[#0066FF] border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  const features = [
-    { icon: MapPin, title: "GPS Check-ins", description: "We verify you're actually at the gym. No faking it." },
-    { icon: Flame, title: "Streak System", description: "Miss a week? Lose your streak. Simple motivation." },
-    { icon: Gift, title: "Earn Rewards", description: "Every workout earns rewards. Redeem for real stuff." },
-    { icon: Users, title: "Gym Community", description: "See who's at your gym. Find workout partners." },
-    { icon: Trophy, title: "Leaderboards", description: "Compete for #1 at your gym. Bragging rights included." },
-    { icon: Award, title: "Achievements", description: "Unlock badges. Show off your consistency." }
-  ];
-
-  const testimonials = [
-    {
-      quote: "Bro I literally set 5AM alarms now because I refuse to let Arjun beat me on the leaderboard. We're not even friends anymore. We're rivals.",
-      author: "CA Student, Pune",
-      highlight: "#2 at Gold's Gym"
-    },
-    {
-      quote: "Met my girlfriend here lol. Saw her on the gym leaderboard, realized we work out at the same time. Slid into the connections. Rest is history.",
-      author: "Product Designer, Bangalore",
-      highlight: "147 connections"
-    },
-    {
-      quote: "I was that guy with a gym membership I used twice a year. 8 months later, 156 check-ins. The streak guilt is real and I love it.",
-      author: "Startup Founder, Mumbai",
-      highlight: "34-week streak"
-    },
-    {
-      quote: "The 6AM Warrior badge changed me. I'm not a morning person. But I'm a badge collector. So now I guess I'm a morning person.",
-      author: "Lawyer, Delhi",
-      highlight: "12 badges earned"
-    },
-    {
-      quote: "My whole office uses this now. We have a Slack channel just for trash talking whoever falls behind on the weekly board.",
-      author: "Tech Lead, Hyderabad",
-      highlight: "23 connections"
-    },
-    {
-      quote: "Got my first free protein shake after 2 weeks. That's when I realized this app is lowkey genius. Now I'm saving ₹3k/month on supplements.",
-      author: "Fitness Coach, Chennai",
-      highlight: "2,400 coins earned"
-    },
-    {
-      quote: "I have commitment issues with everything except my gym streak apparently. 67 weeks and counting. This app fixed me.",
-      author: "Content Creator, Gurgaon",
-      highlight: "67-week streak"
-    },
-    {
-      quote: "My dad started using this after seeing my progress. He's 54 and just hit a 20-week streak. We compete on family leaderboard now.",
-      author: "Doctor, Kolkata",
-      highlight: "Family rank #1"
-    },
-    {
-      quote: "The notification 'Your rival just checked in' hits different. I dropped my coffee and went straight to the gym. Twice this week.",
-      author: "Sales Manager, Ahmedabad",
-      highlight: "Rival defeated 12x"
-    },
-    {
-      quote: "Used to make excuses like 'I'll go tomorrow'. Now my excuse is 'I can't let my streak die'. Much better excuse tbh.",
-      author: "Engineering Student, Jaipur",
-      highlight: "89-day streak"
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden" data-testid="landing-page">
-      {/* Custom CSS for animations */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient 4s ease infinite;
-        }
-        @keyframes slideFromBottom {
-          0% { opacity: 0; transform: translateY(40px); }
-          12% { opacity: 1; transform: translateY(0); }
-          88% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-40px); }
-        }
-        .slide-up-text {
-          animation: slideFromBottom 3s ease-in-out forwards;
-        }
-        @keyframes fadeSlide {
-          0% { opacity: 0; transform: translateX(30px); }
-          10% { opacity: 1; transform: translateX(0); }
-          90% { opacity: 1; transform: translateX(0); }
-          100% { opacity: 0; transform: translateX(-30px); }
-        }
-        .testimonial-slide {
-          animation: fadeSlide 5s ease-in-out;
-        }
-        .testimonial-track {
-          display: flex;
-          transition: transform 0.5s ease-in-out;
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E5E7EB]/50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center shadow-md shadow-[#0066FF]/20">
-              <GymGraphLogo className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold text-[#111111]">GymGraph</span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-[#FF6B00] font-semibold text-sm hidden sm:flex items-center gap-1.5">
-              <Flame className="w-4 h-4" />
-              Launching Soon
-            </span>
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#0A0A0A]/80 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3">
+            <img src="/logo.png" alt="GymGraph" className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl" />
+            <span className="text-lg sm:text-xl font-bold text-white">GymGraph</span>
+          </Link>
+          <div className="flex items-center gap-4 sm:gap-8">
+            <Link to="/about" className="text-white/50 hover:text-white text-sm font-medium">About</Link>
+            <Link to="/contact" className="text-white/50 hover:text-white text-sm font-medium">Contact</Link>
           </div>
         </div>
       </nav>
 
-      {/* Referral Banner */}
-      {referralCode && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#0066FF] via-[#0052CC] to-[#0066FF] py-2.5 px-4 animate-slide-down">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                <Gift className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-white text-sm font-medium">
-                You've been invited! Join as a <strong>Founding Member</strong> before spots fill up
-              </span>
-            </div>
-            <button
-              onClick={() => {
-                setReferralCode(null);
-                localStorage.removeItem('gymgraph_referral_code');
-              }}
-              className="text-white/80 hover:text-white ml-2"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="absolute inset-0 z-0">
+          <EnergyOrb />
         </div>
-      )}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-transparent to-[#0A0A0A] z-[1]" />
 
-      {/* Hero Section */}
-      <section className={`pb-16 lg:pb-20 px-6 relative overflow-hidden ${referralCode ? 'pt-36 lg:pt-44' : 'pt-28 lg:pt-36'}`}>
-        {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[#0066FF]/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#0066FF]/5 rounded-full blur-3xl" />
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight"
+          >
+            <span className="text-white">Stop making</span>
+            <br />
+            <span className="bg-gradient-to-r from-[#0066FF] to-[#00D4AA] bg-clip-text text-transparent">excuses.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-6 text-base sm:text-lg text-white/50 max-w-md mx-auto"
+          >
+            GPS-verified check-ins. Real accountability. No lying to yourself.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-8"
+          >
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 rounded-full border border-white/10 text-white/70 text-sm">
+              <span className="w-1.5 h-1.5 bg-[#00D4AA] rounded-full animate-pulse" />
+              Coming to iOS & Android
+            </span>
+          </motion.div>
         </div>
+      </section>
 
-        <div className="max-w-6xl mx-auto relative">
-          {/* Main Hero Content */}
-          <div className="text-center mb-12">
-            {/* Coming Soon Badge */}
-            <div className="inline-flex items-center gap-2 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-full px-4 py-2 mb-6">
-              <Flame className="w-4 h-4 text-[#FF6B00]" />
-              <span className="text-[#FF6B00] font-semibold text-sm">Overwhelmed with demand — App launching soon!</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111111] mb-6 leading-[1.1]">
-              Finally, a reason to
-              <span className="text-[#0066FF]"> actually go</span> to the gym
-            </h1>
-            <p className="text-lg sm:text-xl text-[#555555] max-w-2xl mx-auto mb-8">
-              Turn every workout into rewards. Compete with friends. Get free supplements.
-            </p>
-            {/* Mystery Reward Box - Hero Placement */}
-            <MysteryBox inline={true} />
-          </div>
+      {/* Core Value */}
+      <section className="relative py-24 sm:py-32 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-8">
+              You don't need another workout plan.
+              <br />
+              <span className="text-white/40">You need someone watching.</span>
+            </h2>
 
-          {/* Visual Loop - The Hook */}
-          <div className="relative mt-16">
-            {/* Center circle */}
-            <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-[#0066FF] rounded-full items-center justify-center shadow-xl shadow-[#0066FF]/30 z-10">
-              <Repeat className="w-10 h-10 text-white" />
-            </div>
-
-            {/* Loop Steps */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
-              {journeySteps.slice(0, 4).map((step, index) => (
-                <div
-                  key={index}
-                  className="group relative bg-white p-6 rounded-2xl border-2 border-[#E5E7EB] hover:border-[#0066FF] transition-all duration-300 hover:shadow-xl cursor-pointer"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-16">
+              {[
+                { title: "Check in", desc: "GPS-verified. You either showed up, or you didn't." },
+                { title: "Build streaks", desc: "The guilt of breaking your streak beats any motivation." },
+                { title: "Compete", desc: "See where you rank against others at your gym." }
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="text-left"
                 >
-                  {/* Step number */}
-                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-[#0066FF]">
-                    {index + 1}
-                  </div>
-
-                  {/* Arrow to next */}
-                  {index < 3 && (
-                    <div className="hidden lg:block absolute -right-6 top-1/2 -translate-y-1/2 z-20">
-                      <ChevronRight className="w-6 h-6 text-[#0066FF]" />
-                    </div>
-                  )}
-
-                  <p className="font-bold text-lg mb-2 group-hover:scale-105 transition-transform text-[#0066FF]">
-                    {step.text}
-                  </p>
-                  <p className="text-sm text-[#666666]">{step.subtext}</p>
-                </div>
+                  <div className="text-[#0066FF] text-sm font-medium mb-2">0{i + 1}</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                  <p className="text-white/40 text-sm leading-relaxed">{item.desc}</p>
+                </motion.div>
               ))}
             </div>
-
-            {/* Final reward callout */}
-            <div className="mt-8 flex justify-center">
-              <div className="inline-flex items-center gap-3 bg-[#0066FF]/10 border border-[#0066FF]/30 rounded-full px-6 py-3">
-                <Gift className="w-5 h-5 text-[#0066FF]" />
-                <span className="font-semibold text-[#0066FF]">Then redeem for real rewards: Protein, Supplements, Gym Gear</span>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
+      {/* Leaderboard */}
+      <section className="relative min-h-[70vh] sm:min-h-[80vh] flex items-center justify-center px-4 sm:px-6">
+        <div className="absolute inset-0 z-0">
+          <Leaderboard3D />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-transparent to-[#0A0A0A] z-[1]" />
 
-      {/* Features Section */}
-      <section className="py-20 px-6 bg-[#F8F9FA]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[#0066FF] font-semibold text-sm uppercase tracking-wide">Features</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] mt-3 mb-4">Built to Keep You Hooked</h2>
-            <p className="text-lg text-[#555555] max-w-2xl mx-auto">Every feature designed to make skipping the gym painful</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <div key={index} className="group bg-white p-6 rounded-2xl border border-[#E5E7EB] hover:border-[#0066FF]/30 hover:shadow-xl transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 bg-[#0066FF]/10">
-                  <feature.icon className="w-6 h-6 text-[#0066FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#111111] mb-2">{feature.title}</h3>
-                <p className="text-[#555555] text-sm leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-2xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+              Climb the ranks
+            </h2>
+            <p className="text-white/40 text-base sm:text-lg">
+              Every check-in earns coins. Maintain streaks for bonuses.
+              <br className="hidden sm:block" />
+              Redeem for real rewards from 500+ fitness brands.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 px-6 bg-white overflow-hidden">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[#0066FF] font-semibold text-sm uppercase tracking-wide">Real Stories</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] mt-3 mb-4">People Can't Shut Up About It</h2>
-            <p className="text-lg text-[#555555]">These are actual users. We couldn't make this up.</p>
-          </div>
+      {/* CTA */}
+      <section className="relative py-24 sm:py-32 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <p className="text-xl sm:text-2xl md:text-3xl text-white/60 leading-relaxed">
+              For people who are done pretending
+              <br />
+              <span className="text-white font-medium">they'll start tomorrow.</span>
+            </p>
 
-          {/* Desktop: Show 3 at a time with carousel */}
-          <div className="hidden md:block relative">
-            <div className="overflow-hidden">
-              <div
-                className="testimonial-track"
-                style={{ transform: `translateX(-${(currentTestimonial % (testimonials.length - 2)) * 33.33}%)` }}
-              >
-                {testimonials.map((testimonial, index) => (
-                  <div key={index} className="min-w-[33.33%] px-3">
-                    <div className="bg-[#F8F9FA] p-6 rounded-2xl border border-[#E5E7EB] h-full">
-                      <div className="flex items-center gap-0.5 text-[#0066FF] mb-4">
-                        {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-                      </div>
-                      <p className="text-[#333333] leading-relaxed mb-6 text-[15px]">"{testimonial.quote}"</p>
-                      <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
-                        <span className="text-[#888888] text-sm">{testimonial.author}</span>
-                        <span className="text-[#0066FF] text-sm font-semibold">{testimonial.highlight}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className="mt-10">
+              <div className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#0066FF] to-[#00D4AA] rounded-full text-white font-medium">
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                Launching Soon
               </div>
             </div>
-
-            {/* Navigation dots */}
-            <div className="flex justify-center gap-2 mt-8">
-              {[...Array(testimonials.length - 2)].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentTestimonial(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    (currentTestimonial % (testimonials.length - 2)) === index
-                      ? 'w-8 bg-[#0066FF]'
-                      : 'w-2 bg-[#E5E7EB] hover:bg-[#D1D5DB]'
-                  }`}
-                  aria-label={`Go to testimonial ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile: Single testimonial carousel */}
-          <div className="md:hidden">
-            <div className="relative overflow-hidden">
-              <div
-                key={currentTestimonial}
-                className="testimonial-slide bg-[#F8F9FA] p-6 rounded-2xl border border-[#E5E7EB]"
-              >
-                <div className="flex items-center gap-0.5 text-[#0066FF] mb-4">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-[#333333] leading-relaxed mb-6 text-[15px]">"{testimonials[currentTestimonial].quote}"</p>
-                <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
-                  <span className="text-[#888888] text-sm">{testimonials[currentTestimonial].author}</span>
-                  <span className="text-[#0066FF] text-sm font-semibold">{testimonials[currentTestimonial].highlight}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile navigation dots */}
-            <div className="flex justify-center gap-2 mt-6">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentTestimonial(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    currentTestimonial === index
-                      ? 'w-6 bg-[#0066FF]'
-                      : 'w-2 bg-[#E5E7EB] hover:bg-[#D1D5DB]'
-                  }`}
-                  aria-label={`Go to testimonial ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
-
 
       {/* Footer */}
-      <footer className="py-12 px-6 bg-[#111111]">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#0066FF] to-[#0052CC] rounded-xl flex items-center justify-center">
-                <GymGraphLogo className="w-6 h-6" />
-              </div>
-              <span className="text-lg font-bold text-white">GymGraph</span>
-            </div>
-            <div className="flex items-center gap-8">
-              <Link to="/about" className="text-[#888888] hover:text-white transition-colors text-sm">About</Link>
-              <Link to="/contact" className="text-[#888888] hover:text-white transition-colors text-sm">Contact</Link>
-              <Link to="/terms" className="text-[#888888] hover:text-white transition-colors text-sm">Terms</Link>
-              <Link to="/privacy" className="text-[#888888] hover:text-white transition-colors text-sm">Privacy</Link>
-            </div>
-            <p className="text-[#888888] text-sm">© {new Date().getFullYear()} GymGraph. All rights reserved.</p>
+      <footer className="py-8 px-4 sm:px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="GymGraph" className="w-6 h-6 rounded" />
+            <span className="text-sm text-white/50">GymGraph</span>
           </div>
+          <div className="flex items-center gap-6 text-sm text-white/30">
+            <Link to="/about" className="hover:text-white/60">About</Link>
+            <Link to="/contact" className="hover:text-white/60">Contact</Link>
+            <Link to="/terms" className="hover:text-white/60">Terms</Link>
+            <Link to="/privacy" className="hover:text-white/60">Privacy</Link>
+          </div>
+          <span className="text-xs text-white/20">© {new Date().getFullYear()}</span>
         </div>
       </footer>
     </div>
