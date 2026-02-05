@@ -44,11 +44,11 @@ export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to acces
 
     try {
       if (isSignUp) {
-        // Sign up
-        const { data, error: authError } = await auth.signUp({
-          email: email.trim(),
-          password,
-        });
+        // Sign up - use correct method name from supabase.js
+        const { data, error: authError } = await auth.signUpWithEmail(
+          email.trim(),
+          password
+        );
 
         if (authError) {
           setError(authError.message);
@@ -64,11 +64,11 @@ export function AdminLogin({ title = "Admin Login", subtitle = "Sign in to acces
         }
         // If session exists, user is logged in automatically
       } else {
-        // Sign in
-        const { data, error: authError } = await auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        // Sign in - use correct method name from supabase.js
+        const { data, error: authError } = await auth.signInWithEmail(
+          email.trim(),
+          password
+        );
 
         if (authError) {
           setError(authError.message);
