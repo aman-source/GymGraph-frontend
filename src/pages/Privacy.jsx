@@ -507,7 +507,7 @@ export default function Privacy() {
                 </li>
               </ul>
               <p className="text-[#555555] leading-relaxed mt-4">
-                To exercise these rights, contact us at <span className="text-[#0066FF]">privacy@gymgraph.in</span>.
+                To exercise these rights, contact us at <span className="text-[#0066FF]">amanabdul21@gmail.com</span>.
                 We will respond to your request within 30 days.
               </p>
             </section>
@@ -522,7 +522,7 @@ export default function Privacy() {
                 permission from a parent or legal guardian to use the Service. If we learn we have collected
                 personal information from a child under 13, we will delete that information promptly. If you
                 believe we have collected information from a child under 13, please contact us immediately at{" "}
-                <span className="text-[#0066FF]">privacy@gymgraph.in</span>.
+                <span className="text-[#0066FF]">amanabdul21@gmail.com</span>.
               </p>
             </section>
 
@@ -590,7 +590,7 @@ export default function Privacy() {
                 </div>
                 <div>
                   <p className="text-[#555555] text-sm font-medium">General Privacy Enquiries</p>
-                  <p className="text-[#0066FF]">privacy@gymgraph.in</p>
+                  <p className="text-[#0066FF]">amanabdul21@gmail.com</p>
                 </div>
                 <div>
                   <p className="text-[#555555] text-sm font-medium">Grievance Officer (DPDP Act)</p>
